@@ -21,7 +21,7 @@
   </header>
 
   <main id="content" tabindex="-1">
-    <nav class="exhibit-nav">
+    <nav class="exhibit-nav" aria-label="Cipher exhibits">
       <a href="#exhibit-1">🇯🇵 Camellia</a>
       <a href="#exhibit-2">🇰🇷 ARIA</a>
       <a href="#exhibit-3">🇨🇳 SM4</a>
@@ -78,7 +78,7 @@
       </div>
 
       <h3>Side-by-Side: Camellia-256-CBC vs AES-256-CBC</h3>
-      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">
+      <p class="note-secondary">
         Same plaintext, same key, same IV — different ciphertext. Both decrypt correctly.
       </p>
       <div class="control-row">
@@ -163,14 +163,14 @@
       </div>
 
       <h3>Involutory S-box Visualizer</h3>
-      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">
+      <p class="note-secondary">
         ARIA's S-boxes are <em>involutory</em>: applying the same S-box twice returns the original value.
         Encryption and decryption share the same circuit — a significant hardware advantage.
       </p>
       <div class="playground">
         <div class="control-row">
           <label for="aria-sbox-input">Input byte (hex)</label>
-          <input type="text" id="aria-sbox-input" value="3f" maxlength="2" style="width:60px; min-width:60px;" />
+          <input type="text" id="aria-sbox-input" value="3f" maxlength="2" class="byte-input" />
           <button id="aria-sbox-go" type="button">Apply S-box</button>
         </div>
         <div class="sbox-demo" id="aria-sbox-demo">
@@ -180,7 +180,7 @@
           <span class="arrow">→</span>
           <span class="step">S₁(S₁(3F)) = <strong class="highlight">??</strong></span>
         </div>
-        <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 0.5rem;">
+        <p class="note-muted">
           <strong>Contrast with AES:</strong> AES uses separate SubBytes and InvSubBytes operations.
           ARIA's involutory design means the same S-box serves both, reducing hardware gate count.
         </p>
@@ -211,7 +211,7 @@
       <div class="playground">
         <div class="control-row">
           <label>Key size</label>
-          <span style="color: var(--text-muted); font-size: 0.88rem;">Fixed 128-bit — SM4 has only one key size</span>
+          <span class="fixed-note">Fixed 128-bit — SM4 has only one key size</span>
         </div>
         <div class="control-row">
           <label for="sm4-key">Key (hex)</label>
@@ -228,8 +228,8 @@
         <div class="output-area" id="sm4-output" role="status" aria-live="polite">
           <span class="label">Output will appear here</span>
         </div>
-        <div style="margin-top: 0.6rem;">
-          <span style="color: var(--text-muted); font-size: 0.82rem;">32-round Feistel structure:</span>
+        <div class="rounds-wrap">
+          <span class="rounds-label">32-round Feistel structure:</span>
           <div class="round-counter" id="sm4-rounds"></div>
         </div>
       </div>
@@ -278,7 +278,7 @@
       <div class="playground">
         <div class="control-row">
           <label>Key size</label>
-          <span style="color: var(--text-muted); font-size: 0.88rem;">Fixed 256-bit</span>
+          <span class="fixed-note">Fixed 256-bit</span>
         </div>
         <div class="control-row">
           <label for="kuz-key">Key (hex)</label>
@@ -305,7 +305,7 @@
         generated randomly</strong>, but was constructed using an undisclosed process. The FSB has
         not responded to these findings.</p>
         <p>This is categorically different from:</p>
-        <ul style="margin: 0.5rem 0 0.5rem 1.5rem; color: var(--text-secondary);">
+        <ul class="context-list">
           <li><strong>AES:</strong> S-box derived from multiplicative inverse in GF(2⁸), fully documented</li>
           <li><strong>Camellia:</strong> design criteria published, S-box generation explained</li>
           <li><strong>ARIA:</strong> involutory S-boxes, construction documented</li>
@@ -333,28 +333,29 @@
       <h3>Comparison Table</h3>
       <div class="comparison-table-wrapper">
         <table class="comparison-table">
+          <caption class="sr-only">Side-by-side comparison of Camellia-256, ARIA-256, SM4, and Kuznyechik properties</caption>
           <thead>
             <tr>
-              <th>Property</th>
-              <th>Camellia-256</th>
-              <th>ARIA-256</th>
-              <th>SM4</th>
-              <th>Kuznyechik</th>
+              <th scope="col">Property</th>
+              <th scope="col">Camellia-256</th>
+              <th scope="col">ARIA-256</th>
+              <th scope="col">SM4</th>
+              <th scope="col">Kuznyechik</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>Country</td><td>Japan</td><td>South Korea</td><td>China</td><td>Russia</td></tr>
-            <tr><td>Designer</td><td>NTT / Mitsubishi</td><td>NSRI Korea</td><td>OSCCA</td><td>FSB Russia</td></tr>
-            <tr><td>Year</td><td>2000</td><td>2003</td><td>2006</td><td>2015</td></tr>
-            <tr><td>Block size</td><td>128-bit</td><td>128-bit</td><td>128-bit</td><td>128-bit</td></tr>
-            <tr><td>Key sizes</td><td>128 / 192 / 256</td><td>128 / 192 / 256</td><td>128 only</td><td>256 only</td></tr>
-            <tr><td>Structure</td><td>Feistel + SPN</td><td>SPN</td><td>Feistel</td><td>SPN</td></tr>
-            <tr><td>ISO/IEC 18033-3</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
-            <tr><td>TLS cipher suite</td><td class="check">✓ (RFC 4132)</td><td class="cross">✗</td><td class="partial">✓ (China TLS)</td><td class="cross">✗</td></tr>
-            <tr><td>Design transparency</td><td class="check">✓ Full</td><td class="check">✓ Full</td><td class="partial">Partial</td><td class="cross">✗ S-box opaque</td></tr>
-            <tr><td>PQ security (128-bit key)</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗ (64-bit PQ)</td><td class="check">✓</td></tr>
-            <tr><td>Use when</td><td>AES alternative</td><td>Korean compliance</td><td>China compliance</td><td>Russian compliance</td></tr>
-            <tr><td>Trust level</td><td class="check">High</td><td class="check">High</td><td class="partial">Medium</td><td class="cross">Use with caution</td></tr>
+            <tr><th scope="row">Country</th><td>Japan</td><td>South Korea</td><td>China</td><td>Russia</td></tr>
+            <tr><th scope="row">Designer</th><td>NTT / Mitsubishi</td><td>NSRI Korea</td><td>OSCCA</td><td>FSB Russia</td></tr>
+            <tr><th scope="row">Year</th><td>2000</td><td>2003</td><td>2006</td><td>2015</td></tr>
+            <tr><th scope="row">Block size</th><td>128-bit</td><td>128-bit</td><td>128-bit</td><td>128-bit</td></tr>
+            <tr><th scope="row">Key sizes</th><td>128 / 192 / 256</td><td>128 / 192 / 256</td><td>128 only</td><td>256 only</td></tr>
+            <tr><th scope="row">Structure</th><td>Feistel + SPN</td><td>SPN</td><td>Feistel</td><td>SPN</td></tr>
+            <tr><th scope="row">ISO/IEC 18033-3</th><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+            <tr><th scope="row">TLS cipher suite</th><td class="check">✓ (RFC 4132)</td><td class="cross">✗</td><td class="partial">✓ (China TLS)</td><td class="cross">✗</td></tr>
+            <tr><th scope="row">Design transparency</th><td class="check">✓ Full</td><td class="check">✓ Full</td><td class="partial">Partial</td><td class="cross">✗ S-box opaque</td></tr>
+            <tr><th scope="row">PQ security (128-bit key)</th><td class="check">✓</td><td class="check">✓</td><td class="cross">✗ (64-bit PQ)</td><td class="check">✓</td></tr>
+            <tr><th scope="row">Use when</th><td>AES alternative</td><td>Korean compliance</td><td>China compliance</td><td>Russian compliance</td></tr>
+            <tr><th scope="row">Trust level</th><td class="check">High</td><td class="check">High</td><td class="partial">Medium</td><td class="cross">Use with caution</td></tr>
           </tbody>
         </table>
       </div>
@@ -364,27 +365,27 @@
         <div class="decision">
           <span class="need">"I need an AES alternative with strong international vetting"</span>
           <span class="arrow-right">→</span>
-          <span class="pick" style="color: var(--success);">Camellia</span>
+          <span class="pick pick-success">Camellia</span>
         </div>
         <div class="decision">
           <span class="need">"I am building for Korean government or finance"</span>
           <span class="arrow-right">→</span>
-          <span class="pick" style="color: var(--success);">ARIA</span>
+          <span class="pick pick-success">ARIA</span>
         </div>
         <div class="decision">
           <span class="need">"I am selling products in China or operating under Chinese law"</span>
           <span class="arrow-right">→</span>
-          <span class="pick" style="color: var(--warning);">SM4</span>
+          <span class="pick pick-warning">SM4</span>
         </div>
         <div class="decision">
           <span class="need">"I need Russian GOST compliance"</span>
           <span class="arrow-right">→</span>
-          <span class="pick" style="color: var(--danger);">Kuznyechik <span style="font-weight:400; font-size:0.82rem;">(S-box caveat noted)</span></span>
+          <span class="pick pick-danger">Kuznyechik <span class="pick-subnote">(S-box caveat noted)</span></span>
         </div>
         <div class="decision">
           <span class="need">"None of the above"</span>
           <span class="arrow-right">→</span>
-          <span class="pick" style="color: var(--accent);">AES-256-GCM</span>
+          <span class="pick pick-accent">AES-256-GCM</span>
         </div>
       </div>
 
@@ -392,7 +393,7 @@
         <strong>🔗 Cross-Demo Reference</strong>
         <p>All four of these ciphers appear in crypto-compare. This demo covers the practical
         encrypt/decrypt behavior. For deeper algorithm reference including security estimates, see:
-        <a href="https://systemslibrarian.github.io/crypto-compare/" style="color: var(--accent);">
+        <a href="https://systemslibrarian.github.io/crypto-compare/" class="cross-link">
           systemslibrarian.github.io/crypto-compare/</a></p>
       </div>
     </section>

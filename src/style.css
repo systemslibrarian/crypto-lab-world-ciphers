@@ -217,6 +217,54 @@ main {
   border-bottom: 1px solid var(--border);
 }
 
+.note-secondary {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.note-muted {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-top: 0.5rem;
+}
+
+.byte-input {
+  width: 60px;
+  min-width: 60px;
+}
+
+.fixed-note {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.rounds-wrap {
+  margin-top: 0.6rem;
+}
+
+.rounds-label {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.context-list {
+  margin: 0.5rem 0 0.5rem 1.5rem;
+  color: var(--text-secondary);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ===== Playground Controls ===== */
 .playground {
   background: var(--bg-secondary);
@@ -484,6 +532,20 @@ button.copy-btn:hover {
   font-weight: 700;
   color: var(--text-primary);
   min-width: 120px;
+}
+
+.decision-tree .pick-success { color: var(--success); }
+.decision-tree .pick-warning { color: var(--warning); }
+.decision-tree .pick-danger { color: var(--danger); }
+.decision-tree .pick-accent { color: var(--accent); }
+
+.decision-tree .pick-subnote {
+  font-weight: 400;
+  font-size: 0.82rem;
+}
+
+.cross-link {
+  color: var(--accent);
 }
 
 /* ===== Side-by-side comparison ===== */
