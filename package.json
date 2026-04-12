@@ -1,0 +1,34 @@
+{
+  "name": "crypto-lab-world-ciphers",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/systemslibrarian/crypto-lab-world-ciphers.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/systemslibrarian/crypto-lab-world-ciphers/issues"
+  },
+  "homepage": "https://github.com/systemslibrarian/crypto-lab-world-ciphers#readme",
+  "devDependencies": {
+    "gh-pages": "^6.3.0",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.8"
+  },
+  "dependencies": {
+    "@li0ard/kuznyechik": "^0.1.4",
+    "@noble/ciphers": "^2.2.0",
+    "gm-crypto": "^0.1.12"
+  }
+}
