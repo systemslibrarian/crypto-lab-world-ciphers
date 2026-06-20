@@ -22,12 +22,46 @@
 
   <main id="content" tabindex="-1">
     <nav class="exhibit-nav" aria-label="Cipher exhibits">
+      <a href="#verify">✅ Verified</a>
       <a href="#exhibit-1">🇯🇵 Camellia</a>
       <a href="#exhibit-2">🇰🇷 ARIA</a>
       <a href="#exhibit-3">🇨🇳 SM4</a>
       <a href="#exhibit-4">🇷🇺 Kuznyechik</a>
-      <a href="#exhibit-5">📊 Comparison</a>
+      <a href="#exhibit-5">🌊 Avalanche</a>
+      <a href="#exhibit-6">🧩 ECB vs CBC</a>
+      <a href="#exhibit-7">📊 Comparison</a>
     </nav>
+
+    <!-- ============================================================ -->
+    <!-- VERIFIED CORRECTNESS — live known-answer tests               -->
+    <!-- ============================================================ -->
+    <section id="verify" class="exhibit verify-exhibit">
+      <h2><span class="flag">✅</span> Verified Against Official Test Vectors</h2>
+      <p class="note-secondary">
+        Every cipher here runs real operations — no simulation. To prove it, the page
+        encrypts each cipher's <strong>known-answer test (KAT)</strong> from its defining
+        standard, right now in your browser, and checks the output byte-for-byte against the
+        published ciphertext. The same vectors gate the repository's <code>npm test</code> suite.
+      </p>
+      <div class="control-row">
+        <button id="kat-run" type="button">Re-run all tests</button>
+        <span id="kat-summary" class="kat-summary" role="status" aria-live="polite"></span>
+      </div>
+      <div class="kat-table-wrapper">
+        <table class="kat-table">
+          <caption class="sr-only">Live known-answer test results for each cipher</caption>
+          <thead>
+            <tr>
+              <th scope="col">Result</th>
+              <th scope="col">Vector</th>
+              <th scope="col">Source</th>
+              <th scope="col">Expected ciphertext</th>
+            </tr>
+          </thead>
+          <tbody id="kat-tbody"></tbody>
+        </table>
+      </div>
+    </section>
 
     <!-- ============================================================ -->
     <!-- EXHIBIT 1 — Camellia-256 (Japan)                             -->
@@ -116,10 +150,12 @@
 
       <div class="callout">
         <strong>💡 Why this matters</strong>
-        <p>Camellia is the only national cipher in this demo included in TLS cipher suites for
-        international use (RFC 4132). It has equivalent security to AES, a published design
-        rationale, and is actively maintained by CRYPTREC. For systems requiring AES alternatives
-        with strong international vetting, Camellia is the most defensible choice.</p>
+        <p>Camellia is on the IETF Standards Track for TLS (RFC 5932, originally RFC 4132), one of
+        only two ciphers here that are — ARIA is the other (RFC 6209). But Camellia stands out for
+        breadth of independent vetting: equivalent security to AES, a fully published design
+        rationale, and active maintenance by Japan's CRYPTREC. For systems that need an AES
+        alternative with the strongest international scrutiny, Camellia is the most defensible
+        choice in this group.</p>
       </div>
     </section>
 
@@ -130,8 +166,8 @@
       <h2><span class="flag">🇰🇷</span> Exhibit 2 — ARIA-256</h2>
       <div class="origin">
         <strong>South Korea</strong> · NSRI (Korean academic consortium), 2003<br>
-        Korean Standard KS X 1213 · ISO/IEC 18033-3<br>
-        Structure: SPN (like AES) with involutory S-boxes<br>
+        Korean Standard KS X 1213 · ISO/IEC 18033-3 · IETF RFC 5794<br>
+        Structure: SPN (like AES) with an involutory diffusion layer<br>
         Block size: 128-bit · Key sizes: 128, 192, 256-bit
       </div>
 
@@ -162,10 +198,17 @@
         </div>
       </div>
 
-      <h3>Involutory S-box Visualizer</h3>
+      <h3>Where ARIA's Involution Really Lives</h3>
       <p class="note-secondary">
-        ARIA's S-boxes are <em>involutory</em>: applying the same S-box twice returns the original value.
-        Encryption and decryption share the same circuit — a significant hardware advantage.
+        ARIA is an <em>involutional</em> cipher — but the involution is in its
+        <strong>diffusion layer</strong>, not its S-boxes. This distinction is commonly
+        garbled; getting it right is the difference between understanding ARIA and parroting it.
+      </p>
+
+      <h4 class="demo-subhead">1. The S-box is <em>not</em> involutory</h4>
+      <p class="note-muted">
+        ARIA's S₁ is the AES (Rijndael) S-box. Applying it twice does <strong>not</strong> return
+        the original byte, so decryption needs a separate inverse, S₁⁻¹. Try any byte:
       </p>
       <div class="playground">
         <div class="control-row">
@@ -178,20 +221,44 @@
           <span class="arrow">→</span>
           <span class="step">S₁(3F) = <strong>??</strong></span>
           <span class="arrow">→</span>
-          <span class="step">S₁(S₁(3F)) = <strong class="highlight">??</strong></span>
+          <span class="step">S₁(S₁(3F)) = <strong>??</strong></span>
+          <span class="arrow">→</span>
+          <span class="step">S₁⁻¹(S₁(3F)) = <strong class="highlight">??</strong></span>
         </div>
         <p class="note-muted">
-          <strong>Contrast with AES:</strong> AES uses separate SubBytes and InvSubBytes operations.
-          ARIA's involutory design means the same S-box serves both, reducing hardware gate count.
+          Note S₁(S₁(x)) ≠ x, but S₁⁻¹(S₁(x)) = x. That second, distinct table is exactly what
+          an involution would let you avoid — and ARIA's S-boxes do not.
         </p>
+      </div>
+
+      <h4 class="demo-subhead">2. The diffusion layer <em>is</em> involutory</h4>
+      <p class="note-muted">
+        ARIA's 16×16 binary diffusion matrix A satisfies A(A(x)) = x for every 128-bit state
+        (RFC 5794: <em>"Note that A is an involution"</em>). Apply it twice and you land back on
+        your input — so the <strong>same</strong> diffusion circuit serves both encryption and
+        decryption. <em>That</em> is ARIA's real hardware advantage.
+      </p>
+      <div class="playground">
+        <div class="control-row">
+          <label for="aria-diff-input">State (hex, 16 bytes)</label>
+          <input type="text" id="aria-diff-input" value="00112233445566778899aabbccddeeff" />
+          <button id="aria-diff-go" type="button">Apply A twice</button>
+        </div>
+        <div class="output-area" id="aria-diff-once" role="status" aria-live="polite">
+          <span class="label">A(state)</span>
+        </div>
+        <div class="output-area" id="aria-diff-twice" role="status" aria-live="polite">
+          <span class="label">A(A(state)) — should equal your input</span>
+        </div>
       </div>
 
       <div class="callout">
         <strong>💡 Why this matters</strong>
         <p>ARIA is legally required for products sold into Korean government and financial markets.
-        Its involutory design is not a weakness — it is a deliberate engineering choice that reduces
-        hardware gate count. If you are building systems for Korean regulatory compliance, ARIA is
-        not optional.</p>
+        Its involutional diffusion layer is a deliberate engineering choice: reusing one diffusion
+        circuit for both directions cuts hardware gate count. If you are building systems for Korean
+        regulatory compliance, ARIA is not optional — and now you can say precisely <em>why</em>
+        it is built the way it is.</p>
       </div>
     </section>
 
@@ -236,12 +303,18 @@
 
       <div class="callout warning">
         <strong>⚠️ Key Size Warning — Post-Quantum Consideration</strong>
-        <p>SM4 has a fixed 128-bit key with no larger variant. At 128-bit classical security,
-        SM4 provides approximately <strong>64-bit post-quantum security</strong> (Grover's algorithm
-        halves symmetric key strength). This is below the NIST post-quantum recommendation of
-        128-bit PQ security.</p>
-        <p><strong>SM4 + classical security only — plan accordingly.</strong>
-        For long-term data protection in a post-quantum world, SM4 alone is insufficient.</p>
+        <p>SM4 has a fixed 128-bit key with no larger variant. Grover's algorithm gives a
+        quadratic speedup against symmetric key search, so the <em>headline</em> figure is
+        ~<strong>64-bit post-quantum security</strong> — versus the 128-bit PQ margin you get
+        from a 256-bit key (Camellia-256, ARIA-256, Kuznyechik).</p>
+        <p><strong>The honest nuance:</strong> Grover's search is inherently serial and
+        parallelizes poorly (splitting it across machines only buys a √-factor), so under NIST's
+        MAXDEPTH model the practical attack cost is far above 2⁶⁴. NIST still uses AES-128 as its
+        post-quantum "Level 1" baseline. The real PQ threat is to <em>asymmetric</em> crypto, not
+        to 128-bit symmetric ciphers per se.</p>
+        <p><strong>Bottom line:</strong> SM4's fixed 128-bit key gives you no headroom to grow.
+        For long-term, defense-in-depth data protection, prefer a 256-bit-key cipher where the
+        choice is yours.</p>
       </div>
 
       <div class="callout">
@@ -325,10 +398,101 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- EXHIBIT 5 — Four-Way Comparison                              -->
+    <!-- EXHIBIT 5 — Avalanche Effect                                 -->
     <!-- ============================================================ -->
     <section id="exhibit-5" class="exhibit">
-      <h2><span class="flag">📊</span> Exhibit 5 — Four-Way Comparison</h2>
+      <h2><span class="flag">🌊</span> Exhibit 5 — The Avalanche Effect</h2>
+      <p class="origin">
+        A core requirement of any strong block cipher: flipping a <strong>single bit</strong> of
+        input should change about <strong>half</strong> of the output bits, unpredictably. This is
+        the avalanche effect (strict avalanche criterion). It's why ciphertext looks like noise and
+        why you can't chip away at a block cipher one bit at a time. All four ciphers here exhibit it.
+      </p>
+
+      <h3>Flip One Bit, Watch Half the Ciphertext Change</h3>
+      <div class="playground">
+        <div class="control-row">
+          <label for="av-cipher">Cipher</label>
+          <select id="av-cipher">
+            <option value="Camellia" selected>🇯🇵 Camellia-256</option>
+            <option value="ARIA">🇰🇷 ARIA-256</option>
+            <option value="SM4">🇨🇳 SM4</option>
+            <option value="Kuznyechik">🇷🇺 Kuznyechik</option>
+          </select>
+          <label for="av-flip">Flip plaintext bit</label>
+          <select id="av-flip"></select>
+          <button id="av-run" type="button">Run</button>
+          <button id="av-random" type="button" class="copy-btn">Randomize key &amp; block</button>
+        </div>
+        <div class="output-area" id="av-base" role="status" aria-live="polite">
+          <span class="label">Ciphertext of original block</span>
+        </div>
+        <div class="output-area" id="av-flipped" role="status" aria-live="polite">
+          <span class="label">Ciphertext after flipping one plaintext bit</span>
+        </div>
+        <div class="avalanche-summary" id="av-summary" role="status" aria-live="polite"></div>
+        <div class="bit-grid" id="av-grid" aria-hidden="true"></div>
+        <p class="note-muted">
+          Each cell is one of the 128 ciphertext bits. Highlighted cells flipped versus the original.
+          A good cipher lands near 64/128 (≈50%) no matter which input bit you change — try a few.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- EXHIBIT 6 — ECB vs CBC                                       -->
+    <!-- ============================================================ -->
+    <section id="exhibit-6" class="exhibit">
+      <h2><span class="flag">🧩</span> Exhibit 6 — Why Mode Matters: ECB vs CBC</h2>
+      <p class="origin">
+        A strong cipher is not enough — how you chain blocks together matters just as much.
+        <strong>ECB</strong> (Electronic Codebook) encrypts every 16-byte block independently, so
+        <strong>identical plaintext blocks produce identical ciphertext blocks</strong>. That leaks
+        structure. <strong>CBC</strong> chains each block into the next with an IV, so repetition
+        disappears. This is the famous "ECB penguin" problem, shown here on raw blocks.
+      </p>
+
+      <h3>Encrypt Three Identical Blocks</h3>
+      <p class="note-secondary">
+        The plaintext below is the same 16-byte block repeated three times. Watch what each mode does.
+      </p>
+      <div class="playground">
+        <div class="control-row">
+          <label for="mode-cipher">Cipher</label>
+          <select id="mode-cipher">
+            <option value="Camellia" selected>🇯🇵 Camellia-256</option>
+            <option value="ARIA">🇰🇷 ARIA-256</option>
+            <option value="SM4">🇨🇳 SM4</option>
+            <option value="Kuznyechik">🇷🇺 Kuznyechik</option>
+          </select>
+          <button id="mode-run" type="button">Encrypt repeated block</button>
+        </div>
+      </div>
+      <div class="side-by-side">
+        <div class="cipher-col">
+          <h4>ECB — blocks encrypted independently</h4>
+          <div class="block-stack" id="mode-ecb" role="status" aria-live="polite"></div>
+          <p class="note-muted" id="mode-ecb-note"></p>
+        </div>
+        <div class="cipher-col">
+          <h4>CBC — blocks chained with an IV</h4>
+          <div class="block-stack" id="mode-cbc" role="status" aria-live="polite"></div>
+          <p class="note-muted" id="mode-cbc-note"></p>
+        </div>
+      </div>
+      <div class="callout danger">
+        <strong>🔴 Never use ECB for real data</strong>
+        <p>ECB is offered in Exhibit 1 strictly to make this failure visible. Production systems use
+        an authenticated mode such as <strong>AES-256-GCM</strong> (or Camellia/SM4 in GCM). It hides
+        block structure <em>and</em> detects tampering — ECB and even raw CBC do neither.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- EXHIBIT 7 — Four-Way Comparison                              -->
+    <!-- ============================================================ -->
+    <section id="exhibit-7" class="exhibit">
+      <h2><span class="flag">📊</span> Exhibit 7 — Four-Way Comparison</h2>
 
       <h3>Comparison Table</h3>
       <div class="comparison-table-wrapper">
@@ -351,7 +515,8 @@
             <tr><th scope="row">Key sizes</th><td>128 / 192 / 256</td><td>128 / 192 / 256</td><td>128 only</td><td>256 only</td></tr>
             <tr><th scope="row">Structure</th><td>Feistel + SPN</td><td>SPN</td><td>Feistel</td><td>SPN</td></tr>
             <tr><th scope="row">ISO/IEC 18033-3</th><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
-            <tr><th scope="row">TLS cipher suite</th><td class="check">✓ (RFC 4132)</td><td class="cross">✗</td><td class="partial">✓ (China TLS)</td><td class="cross">✗</td></tr>
+            <tr><th scope="row">TLS cipher suite (RFC)</th><td class="check">✓ 5932</td><td class="check">✓ 6209</td><td class="check">✓ 8998 (TLS 1.3)</td><td class="partial">✓ 9189 (TLS 1.2)</td></tr>
+            <tr><th scope="row">IETF status</th><td class="check">Standards Track</td><td class="check">Standards Track</td><td class="partial">Informational</td><td class="cross">Not endorsed</td></tr>
             <tr><th scope="row">Design transparency</th><td class="check">✓ Full</td><td class="check">✓ Full</td><td class="partial">Partial</td><td class="cross">✗ S-box opaque</td></tr>
             <tr><th scope="row">PQ security (128-bit key)</th><td class="check">✓</td><td class="check">✓</td><td class="cross">✗ (64-bit PQ)</td><td class="check">✓</td></tr>
             <tr><th scope="row">Use when</th><td>AES alternative</td><td>Korean compliance</td><td>China compliance</td><td>Russian compliance</td></tr>

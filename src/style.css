@@ -627,3 +627,128 @@ footer {
   font-size: 0.85rem;
   margin-top: 0.3rem;
 }
+
+/* ===== Verified Correctness (KAT) ===== */
+.verify-exhibit {
+  border-color: var(--success);
+}
+
+.kat-summary {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.kat-pass { color: var(--success); }
+.kat-fail { color: var(--danger); }
+
+.kat-table-wrapper {
+  overflow-x: auto;
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.kat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  min-width: 640px;
+}
+
+.kat-table th {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  text-align: left;
+  font-weight: 700;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.kat-table td {
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.kat-table .kat-pass,
+.kat-table .kat-fail {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kat-table .kat-hex {
+  font-family: 'Consolas', 'Monaco', monospace;
+  word-break: break-all;
+}
+
+/* ===== Demo subheadings ===== */
+.demo-subhead {
+  font-size: 0.98rem;
+  color: var(--text-primary);
+  margin: 1.4rem 0 0.3rem;
+}
+
+/* ===== Avalanche effect ===== */
+.avalanche-summary {
+  margin: 0.8rem 0 0.4rem;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.bit-grid {
+  display: grid;
+  grid-template-columns: repeat(32, 1fr);
+  gap: 2px;
+  margin: 0.5rem 0;
+  max-width: 420px;
+}
+
+.bit-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 2px;
+  background: var(--accent-dim);
+  border: 1px solid var(--border);
+}
+
+.bit-cell.on {
+  background: var(--warning);
+  border-color: var(--warning);
+}
+
+/* ===== ECB vs CBC block stacks ===== */
+.block-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.cipher-block {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 5px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.78rem;
+}
+
+.cipher-block.repeat {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+}
+
+.cipher-block .block-label {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  min-width: 3.5rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.cipher-block .block-hex {
+  color: var(--text-primary);
+  word-break: break-all;
+}

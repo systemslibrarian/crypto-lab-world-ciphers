@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Verify ciphers against official test vectors
+        run: npm test
+
       - name: Build
         run: npm run build
 

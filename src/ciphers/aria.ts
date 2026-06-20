@@ -79,7 +79,10 @@ const is2 = new Uint8Array([
   0x25,0x8a,0xb5,0xe7,0x42,0xb3,0xc7,0xea,0xf7,0x4c,0x11,0x33,0x03,0xa2,0xac,0x60
 ]);
 
-// Export the ARIA S-boxes for the involutory demo (sb1 is the AES S-box, is1 is its inverse)
+// Export the ARIA S-boxes. NOTE: these S-boxes are NOT involutory.
+// sb1 is the AES (Rijndael) S-box; is1 is its distinct inverse (sb1[is1[x]] === x,
+// but sb1[sb1[x]] !== x). Decryption therefore needs the separate inverse tables.
+// ARIA's actual involution lives in the DIFFUSION layer — see ariaDiffusion below.
 export { sb1 as ARIA_SB1, sb2 as ARIA_SB2, is1 as ARIA_IS1, is2 as ARIA_IS2 };
 
 // Helper: read/write uint32 little-endian
@@ -258,6 +261,22 @@ function ariaCryptEcb(ctx: AriaCtx, input: Uint8Array): Uint8Array {
   putLE32(output, 0, s[0]); putLE32(output, 4, s[1]);
   putLE32(output, 8, s[2]); putLE32(output, 12, s[3]);
   return output;
+}
+
+// ARIA's diffusion layer A is an INVOLUTION: A(A(x)) === x for any 16-byte state.
+// Per RFC 5794: "Note that A is an involution." This is ARIA's distinctive design
+// feature — the same diffusion circuit serves both encryption and decryption.
+// (Contrast: the S-boxes are not involutory and require separate inverse tables.)
+export function ariaDiffusion(state: Uint8Array): Uint8Array {
+  if (state.length !== 16) throw new Error('Diffusion state must be 16 bytes');
+  const s = new Uint32Array(4);
+  s[0] = getLE32(state, 0); s[1] = getLE32(state, 4);
+  s[2] = getLE32(state, 8); s[3] = getLE32(state, 12);
+  ariaA(s);
+  const out = new Uint8Array(16);
+  putLE32(out, 0, s[0]); putLE32(out, 4, s[1]);
+  putLE32(out, 8, s[2]); putLE32(out, 12, s[3]);
+  return out;
 }
 
 export class Aria {

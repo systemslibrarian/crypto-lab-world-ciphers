@@ -1,12 +1,13 @@
 {
   "name": "crypto-lab-world-ciphers",
   "version": "1.0.0",
-  "description": "",
+  "description": "Interactive browser demo of four national block ciphers (Camellia, ARIA, SM4, Kuznyechik), verified against official test vectors.",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
     "deploy": "npm run build && gh-pages -d dist"
   },
   "repository": {
@@ -24,7 +25,8 @@
   "devDependencies": {
     "gh-pages": "^6.3.0",
     "typescript": "^5.9.3",
-    "vite": "^8.0.8"
+    "vite": "^8.0.8",
+    "vitest": "^4.1.9"
   },
   "dependencies": {
     "@li0ard/kuznyechik": "^0.1.4",

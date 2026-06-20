@@ -1,8 +1,10 @@
 import { cbc as aesCbc } from '@noble/ciphers/aes.js';
 import { SM4 } from 'gm-crypto';
 import { Kuznyechik } from '@li0ard/kuznyechik';
-import { Aria, ARIA_IS1, ARIA_SB1 } from './ciphers/aria';
+import { Aria, ARIA_IS1, ARIA_SB1, ariaDiffusion } from './ciphers/aria';
 import { Camellia } from './ciphers/camellia';
+import { CIPHERS } from './ciphers/registry';
+import { KNOWN_ANSWER_TESTS } from './ciphers/test-vectors';
 import {
   bytesToHex,
   bytesToUtf8,
@@ -11,8 +13,10 @@ import {
   ecbDecrypt,
   ecbEncrypt,
   hexToBytes,
+  randomBytes,
   randomHex,
   utf8ToBytes,
+  xorBytes,
 } from './ciphers/utils';
 
 const $ = <T extends HTMLElement>(id: string): T => {
@@ -220,6 +224,8 @@ $('aria-decrypt').addEventListener('click', () => {
   }
 });
 
+const hex2 = (n: number): string => n.toString(16).padStart(2, '0').toUpperCase();
+
 $('aria-sbox-go').addEventListener('click', () => {
   const inputEl = $('aria-sbox-input') as HTMLInputElement;
   const demo = $('aria-sbox-demo');
@@ -230,16 +236,43 @@ $('aria-sbox-go').addEventListener('click', () => {
   }
 
   const x = parseInt(clean, 16);
-  const y = ARIA_SB1[x];
-  const z = ARIA_IS1[y];
+  const s1 = ARIA_SB1[x];        // S1(x)
+  const s1s1 = ARIA_SB1[s1];     // S1(S1(x)) — NOT x, proving non-involution
+  const inv = ARIA_IS1[s1];      // S1⁻¹(S1(x)) = x
 
   demo.innerHTML = `
-    <span class="step">Input: <strong>${clean.toUpperCase()}</strong></span>
+    <span class="step">Input: <strong>${hex2(x)}</strong></span>
     <span class="arrow">→</span>
-    <span class="step">S1(${clean.toUpperCase()}) = <strong>${y.toString(16).padStart(2, '0').toUpperCase()}</strong></span>
+    <span class="step">S₁(${hex2(x)}) = <strong>${hex2(s1)}</strong></span>
     <span class="arrow">→</span>
-    <span class="step">S1⁻¹(S1(x)) = <strong class="highlight">${z.toString(16).padStart(2, '0').toUpperCase()}</strong></span>
+    <span class="step">S₁(S₁(x)) = <strong>${hex2(s1s1)}</strong>${s1s1 === x ? '' : ' ≠ ' + hex2(x)}</span>
+    <span class="arrow">→</span>
+    <span class="step">S₁⁻¹(S₁(x)) = <strong class="highlight">${hex2(inv)}</strong></span>
   `;
+});
+
+// ARIA involutory diffusion layer: A(A(x)) === x
+const ariaDiffInput = $('aria-diff-input') as HTMLInputElement;
+const ariaDiffOnce = $('aria-diff-once');
+const ariaDiffTwice = $('aria-diff-twice');
+
+$('aria-diff-go').addEventListener('click', () => {
+  try {
+    const state = parseKeyHex(ariaDiffInput.value, 16, 'State');
+    const once = ariaDiffusion(state);
+    const twice = ariaDiffusion(once);
+    const recovered = bytesToHex(twice) === bytesToHex(state);
+    outputWithCopy(ariaDiffOnce, 'A(state)', bytesToHex(once));
+    outputWithCopy(
+      ariaDiffTwice,
+      recovered ? 'A(A(state)) = input ✓ involution holds' : 'A(A(state))',
+      bytesToHex(twice),
+      recovered ? 'plaintext-result' : 'hex',
+    );
+  } catch (error) {
+    outputError(ariaDiffOnce, (error as Error).message);
+    ariaDiffTwice.innerHTML = '';
+  }
 });
 
 // Exhibit 3: SM4
@@ -317,3 +350,203 @@ $('kuz-decrypt').addEventListener('click', () => {
     outputError(kuzOutput, (error as Error).message);
   }
 });
+
+// ============================================================
+// Verified Correctness — live known-answer tests
+// ============================================================
+const katTbody = $('kat-tbody') as HTMLTableSectionElement;
+const katSummary = $('kat-summary');
+
+const runKnownAnswerTests = (): void => {
+  katTbody.innerHTML = '';
+  let passed = 0;
+  for (const t of KNOWN_ANSWER_TESTS) {
+    let ok = false;
+    let actual = '';
+    try {
+      actual = bytesToHex(CIPHERS[t.cipher].blockEncrypt(hexToBytes(t.key), hexToBytes(t.plaintext)));
+      ok = actual === t.ciphertext;
+    } catch (error) {
+      actual = (error as Error).message;
+    }
+    if (ok) passed++;
+
+    const row = document.createElement('tr');
+    const result = document.createElement('td');
+    result.className = ok ? 'kat-pass' : 'kat-fail';
+    result.textContent = ok ? '✓ PASS' : '✗ FAIL';
+    const vector = document.createElement('td');
+    vector.textContent = t.label;
+    const source = document.createElement('td');
+    source.textContent = t.source;
+    const expected = document.createElement('td');
+    expected.className = 'kat-hex';
+    expected.textContent = ok ? t.ciphertext : `${t.ciphertext} (got ${actual})`;
+    row.append(result, vector, source, expected);
+    katTbody.appendChild(row);
+  }
+
+  const allPass = passed === KNOWN_ANSWER_TESTS.length;
+  katSummary.textContent = `${passed}/${KNOWN_ANSWER_TESTS.length} vectors reproduced exactly`;
+  katSummary.className = `kat-summary ${allPass ? 'kat-pass' : 'kat-fail'}`;
+};
+
+$('kat-run').addEventListener('click', runKnownAnswerTests);
+runKnownAnswerTests();
+
+// ============================================================
+// Exhibit 5 — Avalanche effect
+// ============================================================
+const avCipher = $('av-cipher') as HTMLSelectElement;
+const avFlip = $('av-flip') as HTMLSelectElement;
+const avBase = $('av-base');
+const avFlipped = $('av-flipped');
+const avSummary = $('av-summary');
+const avGrid = $('av-grid');
+
+let avKey = randomBytes(32);
+let avBlock = randomBytes(16);
+
+// Populate the "which bit to flip" selector (128 bits).
+for (let bit = 0; bit < 128; bit++) {
+  const opt = document.createElement('option');
+  opt.value = String(bit);
+  opt.textContent = `bit ${bit} (byte ${bit >> 3}, bit ${7 - (bit % 8)})`;
+  avFlip.appendChild(opt);
+}
+
+const popcount = (b: number): number => {
+  let c = 0;
+  while (b) { c += b & 1; b >>= 1; }
+  return c;
+};
+
+const runAvalanche = (): void => {
+  try {
+    const spec = CIPHERS[avCipher.value];
+    const key = avKey.slice(0, spec.keyBytes);
+    const base = spec.blockEncrypt(key, avBlock);
+
+    const flipped = avBlock.slice();
+    const bit = Number(avFlip.value);
+    flipped[bit >> 3] ^= 1 << (7 - (bit % 8));
+    const flippedCt = spec.blockEncrypt(key, flipped);
+
+    const diff = xorBytes(base, flippedCt);
+    let changed = 0;
+    for (const byte of diff) changed += popcount(byte);
+
+    outputWithCopy(avBase, 'Ciphertext of original block', bytesToHex(base));
+    outputWithCopy(avFlipped, 'Ciphertext after flipping one plaintext bit', bytesToHex(flippedCt));
+
+    const pct = ((changed / 128) * 100).toFixed(1);
+    avSummary.innerHTML = `<strong>${changed} of 128</strong> ciphertext bits changed (${pct}%) from a single flipped input bit.`;
+
+    avGrid.innerHTML = '';
+    for (let i = 0; i < 128; i++) {
+      const cell = document.createElement('span');
+      const on = (diff[i >> 3] >> (7 - (i % 8))) & 1;
+      cell.className = on ? 'bit-cell on' : 'bit-cell';
+      avGrid.appendChild(cell);
+    }
+  } catch (error) {
+    outputError(avBase, (error as Error).message);
+    avFlipped.innerHTML = '';
+    avSummary.textContent = '';
+    avGrid.innerHTML = '';
+  }
+};
+
+$('av-run').addEventListener('click', runAvalanche);
+avCipher.addEventListener('change', runAvalanche);
+avFlip.addEventListener('change', runAvalanche);
+$('av-random').addEventListener('click', () => {
+  avKey = randomBytes(32);
+  avBlock = randomBytes(16);
+  runAvalanche();
+});
+runAvalanche();
+
+// ============================================================
+// Exhibit 6 — ECB vs CBC pattern leakage
+// ============================================================
+const modeCipher = $('mode-cipher') as HTMLSelectElement;
+const modeEcb = $('mode-ecb');
+const modeCbc = $('mode-cbc');
+const modeEcbNote = $('mode-ecb-note');
+const modeCbcNote = $('mode-cbc-note');
+
+const renderBlocks = (container: HTMLElement, blocks: string[]): void => {
+  container.innerHTML = '';
+  // Mark blocks that repeat so ECB's leakage is visually obvious.
+  const counts = new Map<string, number>();
+  for (const b of blocks) counts.set(b, (counts.get(b) ?? 0) + 1);
+  blocks.forEach((b, i) => {
+    const row = document.createElement('div');
+    row.className = counts.get(b)! > 1 ? 'cipher-block repeat' : 'cipher-block';
+    const label = document.createElement('span');
+    label.className = 'block-label';
+    label.textContent = `block ${i + 1}`;
+    const val = document.createElement('span');
+    val.className = 'block-hex';
+    val.textContent = b;
+    row.append(label, val);
+    container.appendChild(row);
+  });
+};
+
+const splitBlocks = (bytes: Uint8Array): string[] => {
+  const out: string[] = [];
+  for (let i = 0; i < bytes.length; i += 16) out.push(bytesToHex(bytes.slice(i, i + 16)));
+  return out;
+};
+
+const runMode = (): void => {
+  try {
+    const spec = CIPHERS[modeCipher.value];
+    const key = randomBytes(spec.keyBytes);
+    const iv = randomBytes(16);
+
+    // Three identical 16-byte plaintext blocks.
+    const oneBlock = utf8ToBytes('REPEAT-ME-1234!!').slice(0, 16);
+    const plaintext = new Uint8Array(48);
+    plaintext.set(oneBlock, 0);
+    plaintext.set(oneBlock, 16);
+    plaintext.set(oneBlock, 32);
+
+    // ECB: each block encrypted independently.
+    const ecb = new Uint8Array(48);
+    for (let i = 0; i < 48; i += 16) ecb.set(spec.blockEncrypt(key, plaintext.slice(i, i + 16)), i);
+
+    // CBC: chain each block into the next with the IV.
+    const cbc = new Uint8Array(48);
+    let prev = iv;
+    for (let i = 0; i < 48; i += 16) {
+      const enc = spec.blockEncrypt(key, xorBytes(plaintext.slice(i, i + 16), prev));
+      cbc.set(enc, i);
+      prev = enc;
+    }
+
+    const ecbBlocks = splitBlocks(ecb);
+    const cbcBlocks = splitBlocks(cbc);
+    renderBlocks(modeEcb, ecbBlocks);
+    renderBlocks(modeCbc, cbcBlocks);
+
+    const allEcbEqual = ecbBlocks.every((b) => b === ecbBlocks[0]);
+    const allCbcDistinct = new Set(cbcBlocks).size === cbcBlocks.length;
+    modeEcbNote.innerHTML = allEcbEqual
+      ? '⚠️ All three blocks are <strong>identical</strong> — the repetition leaked straight through.'
+      : 'Blocks differ.';
+    modeCbcNote.innerHTML = allCbcDistinct
+      ? '✓ All three blocks <strong>differ</strong>, even though the plaintext repeated.'
+      : 'Blocks repeat (unexpected).';
+  } catch (error) {
+    outputError(modeEcb, (error as Error).message);
+    modeCbc.innerHTML = '';
+  }
+};
+
+$('mode-run').addEventListener('click', runMode);
+modeCipher.addEventListener('change', runMode);
+runMode();
+
