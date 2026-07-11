@@ -1,19 +1,22 @@
 /* ===== CSS Variables: Dark Theme (default) ===== */
 :root,
 [data-theme="dark"] {
+  /* Tell the UA which scheme native widgets (selects, scrollbars) should use —
+     without this, browsers paint form-control chrome for a light page. */
+  color-scheme: dark;
   --bg-primary: #0f1117;
   --bg-secondary: #1a1d2e;
   --bg-card: #1e2235;
   --bg-input: #252a3a;
   --text-primary: #e2e8f0;
   --text-secondary: #a0aec0;
-  --text-muted: #718096;
+  --text-muted: #8b98ab; /* #718096 was <4.5:1 on card/input backgrounds */
   --accent: #63b3ed;
   --accent-hover: #90cdf4;
   --accent-dim: rgba(99, 179, 237, 0.15);
   --border: #2d3748;
   --border-hover: #4a5568;
-  --button-text: #ffffff;
+  --button-text: #0f1117; /* white on #63b3ed is 2.3:1 — dark ink clears AA */
   --success: #68d391;
   --warning: #f6ad55;
   --warning-bg: rgba(246, 173, 85, 0.08);
@@ -29,25 +32,29 @@
 
 /* ===== Light Theme ===== */
 [data-theme="light"] {
+  color-scheme: light;
   --bg-primary: #f7fafc;
   --bg-secondary: #edf2f7;
   --bg-card: #ffffff;
   --bg-input: #f0f4f8;
   --text-primary: #1a202c;
   --text-secondary: #4a5568;
-  --text-muted: #718096;
-  --accent: #3182ce;
-  --accent-hover: #2b6cb0;
-  --accent-dim: rgba(49, 130, 206, 0.1);
+  /* Darker hues below: the 500-level shades (#718096, #3182ce, #38a169,
+     #dd6b20, #e53e3e) all fall under 4.5:1 when used as text on the light
+     backgrounds above. */
+  --text-muted: #5c6779;
+  --accent: #2b6cb0;
+  --accent-hover: #2c5282;
+  --accent-dim: rgba(43, 108, 176, 0.1);
   --border: #e2e8f0;
   --border-hover: #cbd5e0;
   --button-text: #ffffff;
-  --success: #38a169;
-  --warning: #dd6b20;
+  --success: #276749;
+  --warning: #9c4221;
   --warning-bg: rgba(221, 107, 32, 0.08);
-  --danger: #e53e3e;
+  --danger: #c53030;
   --danger-bg: rgba(229, 62, 62, 0.08);
-  --callout-bg: rgba(49, 130, 206, 0.06);
+  --callout-bg: rgba(43, 108, 176, 0.06);
   --callout-border: var(--accent);
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   --code-bg: #edf2f7;
@@ -65,6 +72,11 @@
 }
 
 html {
+  /* Backgrounds use the background-color longhand, and html carries its own
+     background: without it, the body background is promoted to paint the canvas
+     and WebKit then reports body as transparent — axe-core's contrast checks
+     fall back to assuming a white page. */
+  background-color: var(--bg-primary);
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
 }
@@ -73,7 +85,7 @@ html {
   position: absolute;
   left: -9999px;
   top: 0.5rem;
-  background: var(--bg-card);
+  background-color: var(--bg-card);
   color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -87,7 +99,7 @@ html {
 
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: var(--bg-primary);
+  background-color: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.7;
   min-height: 100vh;
@@ -96,15 +108,15 @@ body {
 
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-secondary); }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+::-webkit-scrollbar-track { background-color: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 4px; }
 
 /* ===== Header ===== */
 header {
   position: relative;
   text-align: center;
   padding: 2.5rem 1rem 2rem;
-  background: var(--bg-secondary);
+  background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border);
 }
 
@@ -131,7 +143,7 @@ header .subtitle {
   height: 2.6rem;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: var(--bg-card);
+  background-color: var(--bg-card);
   color: var(--text-primary);
   font-size: 1.25rem;
   cursor: pointer;
@@ -143,7 +155,7 @@ header .subtitle {
 
 #theme-toggle:hover {
   border-color: var(--border-hover);
-  background: var(--bg-input);
+  background-color: var(--bg-input);
 }
 
 /* ===== Main Content ===== */
@@ -161,7 +173,7 @@ main {
   justify-content: center;
   margin-bottom: 2rem;
   padding: 1rem;
-  background: var(--bg-secondary);
+  background-color: var(--bg-secondary);
   border-radius: 8px;
   border: 1px solid var(--border);
 }
@@ -176,13 +188,13 @@ main {
 }
 
 .exhibit-nav a:hover {
-  background: var(--accent-dim);
+  background-color: var(--accent-dim);
 }
 
 /* ===== Exhibit Sections ===== */
 .exhibit {
   margin-bottom: 3rem;
-  background: var(--bg-card);
+  background-color: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 2rem;
@@ -267,7 +279,7 @@ main {
 
 /* ===== Playground Controls ===== */
 .playground {
-  background: var(--bg-secondary);
+  background-color: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.2rem;
@@ -296,7 +308,7 @@ label {
 select,
 input[type="text"],
 textarea {
-  background: var(--bg-input);
+  background-color: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -304,6 +316,17 @@ textarea {
   font-size: 0.9rem;
   font-family: inherit;
   transition: border-color 0.2s;
+}
+
+select {
+  /* Opt out of native widget rendering: WebKit's UA path ignores the author
+     color on selects (reported as black-on-dark by axe). */
+  appearance: none;
+  padding-right: 1.8rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%238b949e' stroke-width='2' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  cursor: pointer;
 }
 
 select:focus,
@@ -326,7 +349,7 @@ input[type="text"] {
 }
 
 button {
-  background: var(--accent);
+  background-color: var(--accent);
   color: var(--button-text);
   border: none;
   border-radius: 6px;
@@ -338,7 +361,7 @@ button {
 }
 
 button:hover {
-  background: var(--accent-hover);
+  background-color: var(--accent-hover);
 }
 
 a:focus-visible,
@@ -351,7 +374,7 @@ textarea:focus-visible {
 }
 
 button.copy-btn {
-  background: var(--bg-input);
+  background-color: var(--bg-input);
   color: var(--text-secondary);
   border: 1px solid var(--border);
   padding: 0.35rem 0.7rem;
@@ -365,7 +388,7 @@ button.copy-btn:hover {
 
 /* ===== Output Areas ===== */
 .output-area {
-  background: var(--code-bg);
+  background-color: var(--code-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.75rem 1rem;
@@ -396,7 +419,7 @@ button.copy-btn:hover {
 
 /* ===== Callouts ===== */
 .callout {
-  background: var(--callout-bg);
+  background-color: var(--callout-bg);
   border-left: 3px solid var(--callout-border);
   border-radius: 0 6px 6px 0;
   padding: 1rem 1.2rem;
@@ -406,12 +429,12 @@ button.copy-btn:hover {
 }
 
 .callout.warning {
-  background: var(--warning-bg);
+  background-color: var(--warning-bg);
   border-left-color: var(--warning);
 }
 
 .callout.danger {
-  background: var(--danger-bg);
+  background-color: var(--danger-bg);
   border-left-color: var(--danger);
 }
 
@@ -433,7 +456,7 @@ button.copy-btn:hover {
   gap: 0.6rem;
   flex-wrap: wrap;
   padding: 0.8rem;
-  background: var(--bg-secondary);
+  background-color: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 6px;
   margin: 0.8rem 0;
@@ -444,7 +467,7 @@ button.copy-btn:hover {
 .sbox-demo .step {
   padding: 0.4rem 0.7rem;
   border-radius: 4px;
-  background: var(--bg-input);
+  background-color: var(--bg-input);
   border: 1px solid var(--border);
 }
 
@@ -474,7 +497,7 @@ button.copy-btn:hover {
 }
 
 .comparison-table th {
-  background: var(--bg-secondary);
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
   font-weight: 700;
   text-align: left;
@@ -490,7 +513,7 @@ button.copy-btn:hover {
 }
 
 .comparison-table tr:nth-child(even) {
-  background: var(--table-stripe);
+  background-color: var(--table-stripe);
 }
 
 .comparison-table .check { color: var(--success); }
@@ -499,7 +522,7 @@ button.copy-btn:hover {
 
 /* ===== Decision Tree ===== */
 .decision-tree {
-  background: var(--bg-secondary);
+  background-color: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.2rem;
@@ -563,7 +586,7 @@ button.copy-btn:hover {
 }
 
 .side-by-side .cipher-col {
-  background: var(--code-bg);
+  background-color: var(--code-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.75rem 1rem;
@@ -587,13 +610,13 @@ button.copy-btn:hover {
   width: 14px;
   height: 14px;
   border-radius: 3px;
-  background: var(--accent-dim);
+  background-color: var(--accent-dim);
   border: 1px solid var(--border);
   transition: background 0.15s;
 }
 
 .round-counter .round-dot.active {
-  background: var(--accent);
+  background-color: var(--accent);
 }
 
 /* ===== Footer ===== */
@@ -601,8 +624,13 @@ footer {
   text-align: center;
   padding: 1.5rem;
   font-size: 0.85rem;
-  opacity: 0.7;
+  /* De-emphasize via color, not opacity — opacity sinks contrast below WCAG AA. */
+  color: var(--text-muted);
   margin-top: 2rem;
+}
+
+footer a {
+  color: var(--accent);
 }
 
 /* ===== Responsive ===== */
@@ -656,7 +684,7 @@ footer {
 }
 
 .kat-table th {
-  background: var(--bg-secondary);
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
   text-align: left;
   font-weight: 700;
@@ -707,12 +735,12 @@ footer {
 .bit-cell {
   aspect-ratio: 1 / 1;
   border-radius: 2px;
-  background: var(--accent-dim);
+  background-color: var(--accent-dim);
   border: 1px solid var(--border);
 }
 
 .bit-cell.on {
-  background: var(--warning);
+  background-color: var(--warning);
   border-color: var(--warning);
 }
 
@@ -730,14 +758,14 @@ footer {
   gap: 0.5rem;
   padding: 0.4rem 0.55rem;
   border-radius: 5px;
-  background: var(--bg-input);
+  background-color: var(--bg-input);
   border: 1px solid var(--border);
   font-family: 'Consolas', 'Monaco', monospace;
   font-size: 0.78rem;
 }
 
 .cipher-block.repeat {
-  background: var(--danger-bg);
+  background-color: var(--danger-bg);
   border-color: var(--danger);
 }
 
