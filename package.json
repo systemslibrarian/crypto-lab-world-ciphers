@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:a11y": "playwright test",
     "deploy": "npm run build && gh-pages -d dist"
   },
   "repository": {
@@ -23,6 +24,8 @@
   },
   "homepage": "https://github.com/systemslibrarian/crypto-lab-world-ciphers#readme",
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
     "gh-pages": "^6.3.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.8",

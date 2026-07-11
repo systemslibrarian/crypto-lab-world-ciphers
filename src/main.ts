@@ -76,11 +76,15 @@ const outputError = (el: HTMLElement, message: string): void => {
 
 const fillRoundDots = (el: HTMLElement, rounds: number): void => {
   el.innerHTML = '';
+  // The dots are a purely visual tally; expose the count once on the
+  // container as an image label rather than per-dot aria-labels (which are
+  // prohibited on generic-role elements).
+  el.setAttribute('role', 'img');
+  el.setAttribute('aria-label', `${rounds} rounds`);
   for (let i = 1; i <= rounds; i++) {
     const dot = document.createElement('span');
     dot.className = 'round-dot active';
-    dot.title = `Round ${i}`;
-    dot.setAttribute('aria-label', `Round ${i}`);
+    dot.setAttribute('aria-hidden', 'true');
     el.appendChild(dot);
   }
 };
