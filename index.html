@@ -131,10 +131,17 @@
 </script>
 <!-- END crypto-lab shared header -->
   <a class="skip-link" href="#content">Skip to content</a>
-  <header>
-    <button id="theme-toggle" type="button" aria-label="Switch to light mode">🌙</button>
-    <h1>🌐 World Ciphers</h1>
-    <p class="subtitle">Four national block ciphers — Camellia, ARIA, SM4, and Kuznyechik — side by side. All share AES's 128-bit block size. Each was built for sovereign independence.</p>
+  <button id="theme-toggle" type="button" aria-label="Switch to light mode">🌙</button>
+  <header class="cl-hero">
+    <div class="cl-hero-main">
+      <h1 class="cl-hero-title">World Ciphers</h1>
+      <p class="cl-hero-sub">Camellia · ARIA · SM4 · Kuznyechik · 128-bit block</p>
+      <p class="cl-hero-desc">Run four national AES-alternative block ciphers against their official test vectors and compare avalanche, ECB-vs-CBC leakage, key sizes, and S-box design side by side.</p>
+    </div>
+    <aside class="cl-hero-why" aria-label="Why it matters">
+      <span class="cl-hero-why-label">WHY IT MATTERS</span>
+      <p class="cl-hero-why-text">Nations standardize their own ciphers to avoid depending on a foreign algorithm they can't fully vet. Because all four share AES's 128-bit block, the same trust properties — avalanche, transparent S-boxes, safe modes — decide whether any of them is truly interchangeable.</p>
+    </aside>
   </header>
 
   <main id="content" tabindex="-1">
