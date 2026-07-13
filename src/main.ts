@@ -3,6 +3,7 @@ import { SM4 } from 'gm-crypto';
 import { Kuznyechik } from '@li0ard/kuznyechik';
 import { Aria, ARIA_IS1, ARIA_SB1, ariaDiffusion } from './ciphers/aria';
 import { Camellia } from './ciphers/camellia';
+import { sm4Trace, type SM4RoundStep } from './ciphers/sm4-trace';
 import { CIPHERS } from './ciphers/registry';
 import { KNOWN_ANSWER_TESTS } from './ciphers/test-vectors';
 import {
@@ -255,6 +256,107 @@ $('aria-sbox-go').addEventListener('click', () => {
   `;
 });
 
+// --- ARIA S-box grid animation: watch the table lookup happen ---
+const ariaSboxGrid = $('aria-sbox-grid') as HTMLTableElement;
+const ariaSboxStep = $('aria-sbox-step');
+let ariaSboxTimers: number[] = [];
+
+// Render the 16x16 S1 grid once. Each cell holds one output byte; data attributes
+// let us address cells by (row, col) = (high nibble, low nibble) of the index.
+const renderAriaSboxGrid = (): void => {
+  ariaSboxGrid.innerHTML = '';
+  const header = document.createElement('tr');
+  const corner = document.createElement('th');
+  corner.textContent = '';
+  corner.className = 'sg-corner';
+  header.appendChild(corner);
+  for (let c = 0; c < 16; c++) {
+    const th = document.createElement('th');
+    th.textContent = c.toString(16).toUpperCase();
+    th.className = 'sg-col-head';
+    th.dataset.col = String(c);
+    header.appendChild(th);
+  }
+  ariaSboxGrid.appendChild(header);
+  for (let r = 0; r < 16; r++) {
+    const tr = document.createElement('tr');
+    const rh = document.createElement('th');
+    rh.textContent = r.toString(16).toUpperCase();
+    rh.className = 'sg-row-head';
+    rh.dataset.row = String(r);
+    tr.appendChild(rh);
+    for (let c = 0; c < 16; c++) {
+      const td = document.createElement('td');
+      const idx = (r << 4) | c;
+      td.textContent = hex2(ARIA_SB1[idx]);
+      td.dataset.idx = String(idx);
+      td.className = 'sg-cell';
+      tr.appendChild(td);
+    }
+    ariaSboxGrid.appendChild(tr);
+  }
+};
+renderAriaSboxGrid();
+
+const clearSboxHighlights = (): void => {
+  ariaSboxGrid.querySelectorAll('.sg-hot,.sg-row-hot,.sg-col-hot').forEach((el) => {
+    el.classList.remove('sg-hot', 'sg-row-hot', 'sg-col-hot');
+  });
+};
+
+// Highlight the row header, column header and landing cell for a lookup of `input`
+// through table `table` (SB1 or IS1), and label what happened.
+const highlightLookup = (input: number, output: number, label: string): void => {
+  clearSboxHighlights();
+  const row = input >> 4;
+  const col = input & 0x0f;
+  const cell = ariaSboxGrid.querySelector<HTMLElement>(`td[data-idx="${input}"]`);
+  const rh = ariaSboxGrid.querySelector<HTMLElement>(`th[data-row="${row}"]`);
+  const ch = ariaSboxGrid.querySelector<HTMLElement>(`th[data-col="${col}"]`);
+  rh?.classList.add('sg-row-hot');
+  ch?.classList.add('sg-col-hot');
+  cell?.classList.add('sg-hot');
+  ariaSboxStep.textContent = `${label}: row ${hex2(row).slice(1)}, col ${hex2(col).slice(1)} → ${hex2(output)}`;
+};
+
+const animateAriaSbox = (): void => {
+  ariaSboxTimers.forEach((t) => window.clearTimeout(t));
+  ariaSboxTimers = [];
+  const inputEl = $('aria-sbox-input') as HTMLInputElement;
+  const clean = inputEl.value.trim().replace(/^0x/i, '').padStart(2, '0').slice(-2);
+  if (!/^[0-9a-fA-F]{2}$/.test(clean)) {
+    ariaSboxStep.textContent = 'Enter one byte in hex (00–ff) above first.';
+    return;
+  }
+  const x = parseInt(clean, 16);
+  const s1 = ARIA_SB1[x];
+  const s1s1 = ARIA_SB1[s1];
+  const inv = ARIA_IS1[s1];
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const steps: Array<() => void> = [
+    () => highlightLookup(x, s1, `S₁(${hex2(x)})`),
+    () => highlightLookup(s1, s1s1, `S₁(${hex2(s1)}) — different cell, so S₁ is NOT an involution`),
+    () => {
+      // Show the inverse landing back on x, but the inverse table isn't rendered,
+      // so highlight the S1 cell whose output equals inv==x to make the return visible.
+      highlightLookup(s1, inv, `S₁⁻¹(${hex2(s1)}) = ${hex2(inv)} — back to your byte`);
+    },
+  ];
+  if (reduced) {
+    steps[steps.length - 1]();
+    return;
+  }
+  let delay = 0;
+  for (const fn of steps) {
+    ariaSboxTimers.push(window.setTimeout(fn, delay));
+    delay += 1100;
+  }
+};
+
+$('aria-sbox-animate').addEventListener('click', animateAriaSbox);
+// Also animate when the primary "Apply S-box" button runs so the two views stay in sync.
+$('aria-sbox-go').addEventListener('click', animateAriaSbox);
+
 // ARIA involutory diffusion layer: A(A(x)) === x
 const ariaDiffInput = $('aria-diff-input') as HTMLInputElement;
 const ariaDiffOnce = $('aria-diff-once');
@@ -291,6 +393,74 @@ if (!sm4Key.value.trim() || sm4Key.value.trim().length !== 32) {
 }
 fillRoundDots(sm4Rounds, 32);
 
+// --- SM4 round animation (Exhibit 3): shows genuine per-round state from sm4Trace ---
+const sm4AnimState = $('sm4-anim-state');
+const sm4AnimBar = $('sm4-anim-bar') as HTMLElement;
+const sm4AnimRoundLabel = $('sm4-anim-round');
+const sm4AnimStages = Array.from(
+  document.querySelectorAll<HTMLElement>('#sm4-anim .ra-stage'),
+);
+const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+let sm4AnimTimers: number[] = [];
+let sm4LastTraceSteps: SM4RoundStep[] = [];
+
+const clearSm4Anim = (): void => {
+  sm4AnimTimers.forEach((t) => window.clearTimeout(t));
+  sm4AnimTimers = [];
+};
+
+const renderSm4Round = (step: SM4RoundStep, total: number): void => {
+  // Show the four live 32-bit state words; the word being replaced is highlighted.
+  sm4AnimState.innerHTML = '';
+  const words = [...step.wordsBefore];
+  words.forEach((w, idx) => {
+    const cell = document.createElement('span');
+    cell.className = idx === 0 ? 'ra-word consumed' : 'ra-word';
+    cell.textContent = `X${idx} ${w}`;
+    sm4AnimState.appendChild(cell);
+  });
+  const rk = document.createElement('span');
+  rk.className = 'ra-word rk';
+  rk.textContent = `rk ${step.rkHex}`;
+  sm4AnimState.appendChild(rk);
+
+  sm4AnimRoundLabel.textContent =
+    `Round ${step.round} of ${total} — new word X${step.round + 3} = ${step.newWordHex}`;
+  sm4AnimBar.style.width = `${(step.round / total) * 100}%`;
+};
+
+const lightStage = (name: string | null): void => {
+  sm4AnimStages.forEach((el) => {
+    el.classList.toggle('active', el.dataset.stage === name);
+  });
+};
+
+const playSm4Anim = (steps: SM4RoundStep[]): void => {
+  clearSm4Anim();
+  sm4LastTraceSteps = steps;
+  if (!steps.length) return;
+  const total = steps.length;
+
+  if (prefersReducedMotion) {
+    // Respect reduced motion: jump straight to the final round, no stage flashing.
+    renderSm4Round(steps[total - 1], total);
+    lightStage('feed');
+    return;
+  }
+
+  const stageOrder = ['xor', 'sub', 'mix', 'feed'];
+  const perStage = 55; // ms; 32 rounds * 4 stages ~ 7s total
+  let delay = 0;
+  steps.forEach((step) => {
+    sm4AnimTimers.push(window.setTimeout(() => renderSm4Round(step, total), delay));
+    stageOrder.forEach((stage) => {
+      sm4AnimTimers.push(window.setTimeout(() => lightStage(stage), delay));
+      delay += perStage;
+    });
+  });
+  sm4AnimTimers.push(window.setTimeout(() => lightStage(null), delay));
+};
+
 $('sm4-encrypt').addEventListener('click', () => {
   try {
     const keyHex = parseKeyHex(sm4Key.value, 16, 'SM4 key');
@@ -301,10 +471,49 @@ $('sm4-encrypt').addEventListener('click', () => {
     });
     sm4LastCipherHex = cipherHex;
     outputWithCopy(sm4Output, 'Ciphertext (hex)', cipherHex);
+
+    // Animate the real rounds of the FIRST 16-byte block of the plaintext.
+    const firstBlock = utf8ToBytes(sm4Plaintext.value).slice(0, 16);
+    const block = new Uint8Array(16);
+    block.set(firstBlock.slice(0, 16));
+    playSm4Anim(sm4Trace(keyHex, block).steps);
   } catch (error) {
     outputError(sm4Output, (error as Error).message);
   }
 });
+
+$('sm4-anim-run').addEventListener('click', () => {
+  if (sm4LastTraceSteps.length) {
+    playSm4Anim(sm4LastTraceSteps);
+  } else {
+    try {
+      const keyHex = parseKeyHex(sm4Key.value, 16, 'SM4 key');
+      const firstBlock = utf8ToBytes(sm4Plaintext.value).slice(0, 16);
+      const block = new Uint8Array(16);
+      block.set(firstBlock.slice(0, 16));
+      playSm4Anim(sm4Trace(keyHex, block).steps);
+    } catch {
+      /* invalid key — ignore; encrypt surfaces the error */
+    }
+  }
+});
+
+// Seed the animation on load with the default state so it isn't empty.
+(() => {
+  try {
+    const keyHex = hexToBytes(
+      sm4Key.value.trim().length === 32 ? sm4Key.value.trim() : randomHex(16),
+    );
+    const firstBlock = utf8ToBytes(sm4Plaintext.value).slice(0, 16);
+    const block = new Uint8Array(16);
+    block.set(firstBlock.slice(0, 16));
+    const steps = sm4Trace(keyHex, block).steps;
+    sm4LastTraceSteps = steps;
+    renderSm4Round(steps[0], steps.length);
+  } catch {
+    /* ignore seeding errors */
+  }
+})();
 
 $('sm4-decrypt').addEventListener('click', () => {
   try {
@@ -553,4 +762,108 @@ const runMode = (): void => {
 $('mode-run').addEventListener('click', runMode);
 modeCipher.addEventListener('change', runMode);
 runMode();
+
+// ============================================================
+// Exhibit 6 — the ACTUAL ECB penguin: encrypt a real image
+// ============================================================
+const penguinCipher = $('penguin-cipher') as HTMLSelectElement;
+const penguinPlain = $('penguin-plain') as HTMLCanvasElement;
+const penguinEcbCanvas = $('penguin-ecb') as HTMLCanvasElement;
+const penguinCbcCanvas = $('penguin-cbc') as HTMLCanvasElement;
+const penguinNote = $('penguin-note');
+
+const PENGUIN_DIM = 96; // 96x96 grayscale = 9216 bytes = 576 exact 16-byte blocks
+
+// Draw a bold penguin silhouette with large flat regions. Big constant-color areas
+// are what make ECB's block-repetition leak visible: many identical 16-byte plaintext
+// blocks map to identical ciphertext blocks, so the shape's outline survives.
+const drawPenguin = (): Uint8Array => {
+  const ctx = penguinPlain.getContext('2d')!;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, PENGUIN_DIM, PENGUIN_DIM);
+  ctx.fillStyle = '#101010';
+  // Body (large black oval)
+  ctx.beginPath();
+  ctx.ellipse(48, 54, 28, 36, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Head
+  ctx.beginPath();
+  ctx.ellipse(48, 22, 17, 16, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // White belly (large flat white region inside black body)
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.ellipse(48, 58, 16, 26, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Eyes (white)
+  ctx.beginPath(); ctx.ellipse(41, 20, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(55, 20, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+  // Pupils
+  ctx.fillStyle = '#101010';
+  ctx.beginPath(); ctx.ellipse(41, 21, 1.6, 2, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(55, 21, 1.6, 2, 0, 0, Math.PI * 2); ctx.fill();
+  // Beak + feet (orange -> mid gray)
+  ctx.fillStyle = '#f6a000';
+  ctx.beginPath(); ctx.moveTo(48, 24); ctx.lineTo(42, 30); ctx.lineTo(54, 30); ctx.closePath(); ctx.fill();
+  ctx.fillRect(38, 88, 8, 5);
+  ctx.fillRect(50, 88, 8, 5);
+
+  // Extract a single grayscale byte per pixel.
+  const img = ctx.getImageData(0, 0, PENGUIN_DIM, PENGUIN_DIM).data;
+  const gray = new Uint8Array(PENGUIN_DIM * PENGUIN_DIM);
+  for (let i = 0; i < gray.length; i++) {
+    const r = img[i * 4], g = img[i * 4 + 1], b = img[i * 4 + 2];
+    gray[i] = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+  }
+  return gray;
+};
+
+const paintGray = (canvas: HTMLCanvasElement, gray: Uint8Array): void => {
+  const ctx = canvas.getContext('2d')!;
+  const out = ctx.createImageData(PENGUIN_DIM, PENGUIN_DIM);
+  for (let i = 0; i < gray.length; i++) {
+    out.data[i * 4] = gray[i];
+    out.data[i * 4 + 1] = gray[i];
+    out.data[i * 4 + 2] = gray[i];
+    out.data[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(out, 0, 0);
+};
+
+const runPenguin = (): void => {
+  try {
+    const gray = drawPenguin(); // also paints the original canvas
+    const spec = CIPHERS[penguinCipher.value];
+    const key = randomBytes(spec.keyBytes);
+    const iv = randomBytes(16);
+
+    // ECB: encrypt each 16-byte block of the image plane independently.
+    const ecb = new Uint8Array(gray.length);
+    for (let i = 0; i < gray.length; i += 16) {
+      ecb.set(spec.blockEncrypt(key, gray.slice(i, i + 16)), i);
+    }
+
+    // CBC: chain each block with the IV.
+    const cbc = new Uint8Array(gray.length);
+    let prev = iv;
+    for (let i = 0; i < gray.length; i += 16) {
+      const enc = spec.blockEncrypt(key, xorBytes(gray.slice(i, i + 16), prev));
+      cbc.set(enc, i);
+      prev = enc;
+    }
+
+    paintGray(penguinEcbCanvas, ecb);
+    paintGray(penguinCbcCanvas, cbc);
+    penguinNote.textContent =
+      `Encrypted 9216 real image bytes (576 blocks) with ${spec.name}. ` +
+      `ECB leaks the penguin's flat regions as a ghost; CBC's chaining erases it. ` +
+      `Same cipher and key — only the mode differs.`;
+  } catch (error) {
+    penguinNote.textContent = (error as Error).message;
+  }
+};
+
+$('penguin-run').addEventListener('click', runPenguin);
+penguinCipher.addEventListener('change', runPenguin);
+runPenguin();
 

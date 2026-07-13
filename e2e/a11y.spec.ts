@@ -37,14 +37,17 @@ async function driveDemos(page: Page): Promise<void> {
     'aria-encrypt',
     'aria-decrypt',
     'aria-sbox-go',
+    'aria-sbox-animate',
     'aria-diff-go',
     'sm4-encrypt',
     'sm4-decrypt',
+    'sm4-anim-run',
     'kuz-encrypt',
     'kuz-decrypt',
     'av-run',
     'av-random',
     'mode-run',
+    'penguin-run',
   ];
   for (const id of ids) {
     const btn = page.locator(`#${id}`);

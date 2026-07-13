@@ -146,6 +146,7 @@
 
   <main id="content" tabindex="-1">
     <nav class="exhibit-nav" aria-label="Cipher exhibits">
+      <a href="#primer">🧭 Start Here</a>
       <a href="#verify">✅ Verified</a>
       <a href="#exhibit-1">🇯🇵 Camellia</a>
       <a href="#exhibit-2">🇰🇷 ARIA</a>
@@ -155,6 +156,67 @@
       <a href="#exhibit-6">🧩 ECB vs CBC</a>
       <a href="#exhibit-7">📊 Comparison</a>
     </nav>
+
+    <!-- ============================================================ -->
+    <!-- PRIMER — plain-English vocabulary, always visible             -->
+    <!-- ============================================================ -->
+    <section id="primer" class="exhibit primer-exhibit">
+      <h2><span class="flag">🧭</span> Start Here — The Vocabulary in One Panel</h2>
+      <p class="note-secondary">
+        Every exhibit below uses a handful of load-bearing words. Here is each in one plain
+        sentence, so the comparison table's <em>Structure</em> and <em>transparency</em> rows read
+        like English, not jargon. Terms in the exhibits link back here.
+      </p>
+      <dl class="primer-grid">
+        <div class="primer-term" id="term-block">
+          <dt>Block cipher</dt>
+          <dd>A recipe that scrambles one fixed-size chunk of data (here, a <strong>block</strong>
+            of 128 bits = 16 bytes) at a time. The same key both scrambles and unscrambles.</dd>
+        </div>
+        <div class="primer-term" id="term-key">
+          <dt>Key</dt>
+          <dd>The secret number that controls the scrambling. A 256-bit key is one of 2²⁵⁶
+            possibilities — far too many to guess. Bigger keys leave more headroom against future
+            attacks.</dd>
+        </div>
+        <div class="primer-term" id="term-round">
+          <dt>Round</dt>
+          <dd>One pass of scrambling. Ciphers repeat a simple round many times (SM4 does 32); each
+            round mixes the data a little more, so <strong>more rounds = larger security
+            margin</strong>.</dd>
+        </div>
+        <div class="primer-term" id="term-sbox">
+          <dt>S-box (substitution box)</dt>
+          <dd>A fixed lookup table that swaps each byte for another (00→63, 01→7c, …). It is the
+            <strong>non-linear</strong> heart of the cipher — the part that resists algebra. Whether
+            its design is <em>public and explained</em> is the whole "transparency" question.</dd>
+        </div>
+        <div class="primer-term" id="term-spn">
+          <dt>SPN (substitution-permutation network)</dt>
+          <dd>A round design that <strong>substitutes</strong> every byte (S-box), then
+            <strong>permutes/mixes</strong> them across the whole block, then adds the round key.
+            AES, ARIA, and Kuznyechik are SPNs. Every bit touches every other bit quickly.</dd>
+        </div>
+        <div class="primer-term" id="term-feistel">
+          <dt>Feistel network</dt>
+          <dd>A different round design: split the block in half, run one half through a scrambling
+            function, XOR it into the other half, swap. Its trick is that
+            <strong>encryption and decryption run the same circuit</strong>. Camellia and SM4 use
+            Feistel structures.</dd>
+        </div>
+        <div class="primer-term" id="term-involution">
+          <dt>Involution</dt>
+          <dd>A function that is <strong>its own inverse</strong>: apply it twice and you are back
+            where you started, f(f(x)) = x. Reusing one involutory circuit for both encrypt and
+            decrypt saves hardware. Watch for it in ARIA's diffusion layer (Exhibit 2).</dd>
+        </div>
+        <div class="primer-term" id="term-diffusion">
+          <dt>Diffusion layer</dt>
+          <dd>The mixing step that spreads each byte's influence across the whole block, so one
+            changed input bit avalanches into many changed output bits (Exhibit 5).</dd>
+        </div>
+      </dl>
+    </section>
 
     <!-- ============================================================ -->
     <!-- VERIFIED CORRECTNESS — live known-answer tests               -->
@@ -195,7 +257,8 @@
       <div class="origin">
         <strong>Japan</strong> · NTT &amp; Mitsubishi Electric, 2000<br>
         ISO/IEC 18033-3 · IETF RFC 3713 · CRYPTREC approved<br>
-        Structure: Feistel network with SPN-like keying layers (FL/FL⁻¹)<br>
+        Structure: <a href="#term-feistel" class="jargon">Feistel network</a> with
+        <a href="#term-spn" class="jargon">SPN</a>-like keying layers (FL/FL⁻¹)<br>
         Block size: 128-bit · Key sizes: 128, 192, 256-bit
       </div>
 
@@ -262,6 +325,16 @@
           </div>
         </div>
       </div>
+      <div class="callout takeaway">
+        <strong>✅ The takeaway</strong>
+        <p>Same inputs, <em>different</em> ciphertext — because Camellia and AES are different
+          algorithms. Two consequences follow, and both matter: first,
+          <strong>interoperability requires both sides to agree on the algorithm</strong> — a
+          Camellia sender and an AES receiver cannot talk, even with the identical key. Second, and
+          just as important, <strong>"different-looking output" is not evidence of more
+          security</strong>. Both here are 256-bit ciphers with comparable security margins; the
+          divergent hex tells you they are <em>distinct</em>, not that either is <em>stronger</em>.</p>
+      </div>
 
       <h3>Round Structure</h3>
       <div class="callout">
@@ -291,7 +364,9 @@
       <div class="origin">
         <strong>South Korea</strong> · NSRI (Korean academic consortium), 2003<br>
         Korean Standard KS X 1213 · ISO/IEC 18033-3 · IETF RFC 5794<br>
-        Structure: SPN (like AES) with an involutory diffusion layer<br>
+        Structure: <a href="#term-spn" class="jargon">SPN</a> (like AES) with an
+        <a href="#term-involution" class="jargon">involutory</a>
+        <a href="#term-diffusion" class="jargon">diffusion layer</a><br>
         Block size: 128-bit · Key sizes: 128, 192, 256-bit
       </div>
 
@@ -324,9 +399,12 @@
 
       <h3>Where ARIA's Involution Really Lives</h3>
       <p class="note-secondary">
-        ARIA is an <em>involutional</em> cipher — but the involution is in its
-        <strong>diffusion layer</strong>, not its S-boxes. This distinction is commonly
-        garbled; getting it right is the difference between understanding ARIA and parroting it.
+        First, plainly: an <a href="#term-involution" class="jargon"><strong>involution</strong></a>
+        is a function that is its own inverse — apply it twice and you are back where you started,
+        <em>f(f(x)) = x</em>. ARIA is an <em>involutional</em> cipher, but the involution is in its
+        <a href="#term-diffusion" class="jargon"><strong>diffusion layer</strong></a>, not its
+        <a href="#term-sbox" class="jargon">S-boxes</a>. This distinction is commonly garbled;
+        getting it right is the difference between understanding ARIA and parroting it.
       </p>
 
       <h4 class="demo-subhead">1. The S-box is <em>not</em> involutory</h4>
@@ -351,8 +429,26 @@
         </div>
         <p class="note-muted">
           Note S₁(S₁(x)) ≠ x, but S₁⁻¹(S₁(x)) = x. That second, distinct table is exactly what
-          an involution would let you avoid — and ARIA's S-boxes do not.
+          an <a href="#term-involution" class="jargon">involution</a> would let you avoid — and
+          ARIA's S-boxes do not.
         </p>
+
+        <h4 class="demo-subhead">Watch the lookup happen in the table</h4>
+        <p class="note-muted">
+          The S-box is just a 16×16 grid of 256 output bytes. To look up S₁(x), split the input byte
+          into its high nibble (the <strong>row</strong>) and low nibble (the <strong>column</strong>)
+          and read the cell where they meet. Press <em>Animate lookup</em> to trace S₁, then S₁ again
+          (landing somewhere <em>else</em> — the proof it is not an
+          <a href="#term-involution" class="jargon">involution</a>), then S₁⁻¹ back to your byte.
+        </p>
+        <div class="control-row">
+          <button id="aria-sbox-animate" type="button" class="copy-btn">Animate lookup</button>
+          <span class="sbox-step-label" id="aria-sbox-step" role="status" aria-live="polite"></span>
+        </div>
+        <div class="sbox-grid-wrap" tabindex="0" role="img" id="aria-sbox-grid-region"
+             aria-label="ARIA S1 substitution table, 16 by 16 grid of 256 output bytes">
+          <table class="sbox-grid" id="aria-sbox-grid" aria-hidden="true"></table>
+        </div>
       </div>
 
       <h4 class="demo-subhead">2. The diffusion layer <em>is</em> involutory</h4>
@@ -394,7 +490,9 @@
       <div class="origin">
         <strong>China</strong> · OSCCA (Office of State Commercial Cryptography Administration), 2006<br>
         GB/T 32907-2016 · ISO/IEC 18033-3<br>
-        Structure: 32-round non-balanced Feistel network with nonlinear T-transform<br>
+        Structure: 32-<a href="#term-round" class="jargon">round</a> non-balanced
+        <a href="#term-feistel" class="jargon">Feistel network</a> with a nonlinear T-transform
+        (its <a href="#term-sbox" class="jargon">S-box</a> plus mixing)<br>
         Block size: 128-bit · Key size: <strong>128-bit only</strong> (no 192 or 256-bit variant)
       </div>
 
@@ -424,6 +522,39 @@
           <div class="round-counter" id="sm4-rounds"></div>
         </div>
       </div>
+
+      <h3>Watch the 32 Rounds Run</h3>
+      <p class="note-secondary">
+        Encrypting above kicks off this schematic. SM4 keeps the 128-bit block as four 32-bit words
+        (X₀ X₁ X₂ X₃). Each <a href="#term-round" class="jargon">round</a> takes the newest three
+        words plus a round key, pushes them through the
+        <strong>substitute → mix → add-round-key</strong> pipeline (that is the T-transform), and the
+        result becomes the next word — a <a href="#term-feistel" class="jargon">Feistel</a> shift.
+        Watch each stage light up: this is <em>why</em> 32 rounds diffuses a single input bit across
+        the whole block, not just a dot to count.
+      </p>
+      <div class="round-anim" id="sm4-anim" aria-hidden="true">
+        <div class="ra-state" id="sm4-anim-state"></div>
+        <div class="ra-pipeline">
+          <span class="ra-stage" data-stage="xor">⊕ round key</span>
+          <span class="ra-arrow">→</span>
+          <span class="ra-stage" data-stage="sub">substitute (S-box)</span>
+          <span class="ra-arrow">→</span>
+          <span class="ra-stage" data-stage="mix">mix (linear L)</span>
+          <span class="ra-arrow">→</span>
+          <span class="ra-stage" data-stage="feed">new word</span>
+        </div>
+        <div class="ra-progress"><span class="ra-progress-bar" id="sm4-anim-bar"></span></div>
+      </div>
+      <div class="control-row">
+        <button id="sm4-anim-run" type="button" class="copy-btn">Replay round animation</button>
+        <span class="ra-round-label" id="sm4-anim-round" role="status" aria-live="polite"></span>
+      </div>
+      <p class="note-muted">
+        Schematic of the real data flow (word rotation + T-transform per SM4 / GB/T 32907-2016). The
+        hex words shown are the live state you just encrypted; the stage highlighting is illustrative
+        timing, not a claim about gate-level latency.
+      </p>
 
       <div class="callout warning">
         <strong>⚠️ Key Size Warning — Post-Quantum Consideration</strong>
@@ -467,7 +598,8 @@
         <strong>Russia</strong> · FSB (Federal Security Service), 2015<br>
         GOST R 34.12-2015 · ISO/IEC 18033-3<br>
         Replaces the older GOST 28147-89 block cipher<br>
-        Structure: SPN with a 10-round substitution-permutation network<br>
+        Structure: <a href="#term-spn" class="jargon">SPN</a> — a 10-<a href="#term-round" class="jargon">round</a>
+        substitution-permutation network<br>
         Block size: 128-bit · Key size: <strong>256-bit only</strong>
       </div>
 
@@ -604,6 +736,44 @@
           <p class="note-muted" id="mode-cbc-note"></p>
         </div>
       </div>
+      <h3>The Actual "ECB Penguin": Encrypt a Picture</h3>
+      <p class="note-secondary">
+        Hex rows prove the leak; a picture makes it unforgettable. Below is a small image encrypted
+        with a real block cipher two ways. In <strong>ECB</strong>, identical plaintext blocks
+        (flat regions of the image) become identical ciphertext blocks, so the <em>ghost of the
+        original shows through</em>. In <strong>CBC</strong>, chaining destroys the pattern and the
+        same image turns to noise. Same cipher, same key — only the mode differs.
+      </p>
+      <div class="control-row">
+        <label for="penguin-cipher">Cipher</label>
+        <select id="penguin-cipher">
+          <option value="Camellia" selected>🇯🇵 Camellia-256</option>
+          <option value="ARIA">🇰🇷 ARIA-256</option>
+          <option value="SM4">🇨🇳 SM4</option>
+          <option value="Kuznyechik">🇷🇺 Kuznyechik</option>
+        </select>
+        <button id="penguin-run" type="button">Encrypt the image</button>
+      </div>
+      <div class="penguin-row">
+        <figure class="penguin-fig">
+          <canvas id="penguin-plain" width="96" height="96" aria-hidden="true"></canvas>
+          <figcaption>Original image</figcaption>
+        </figure>
+        <figure class="penguin-fig">
+          <canvas id="penguin-ecb" width="96" height="96" aria-hidden="true"></canvas>
+          <figcaption>ECB — ghost survives ⚠️</figcaption>
+        </figure>
+        <figure class="penguin-fig">
+          <canvas id="penguin-cbc" width="96" height="96" aria-hidden="true"></canvas>
+          <figcaption>CBC — pure noise ✓</figcaption>
+        </figure>
+      </div>
+      <p class="note-muted" id="penguin-note" role="status" aria-live="polite">
+        Each canvas renders real pixel bytes: the middle one is those bytes encrypted block-by-block
+        in ECB, the right one in CBC. Nothing is faked — the ECB ghost is the cipher genuinely
+        leaking the image's repeated blocks.
+      </p>
+
       <div class="callout danger">
         <strong>🔴 Never use ECB for real data</strong>
         <p>ECB is offered in Exhibit 1 strictly to make this failure visible. Production systems use

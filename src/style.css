@@ -271,6 +271,58 @@ main {
   border: 0;
 }
 
+/* ===== Primer panel ===== */
+.primer-exhibit {
+  border-color: var(--accent);
+}
+
+.primer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.primer-term {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 0.95rem;
+  scroll-margin-top: 5rem;
+}
+
+.primer-term dt {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.primer-term dd {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+/* Highlight a term when linked to from a jargon reference. */
+.primer-term:target {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
+/* Inline jargon links inside origin blurbs and prose. */
+a.jargon {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+a.jargon:hover {
+  text-decoration-style: solid;
+}
+
 /* ===== Playground Controls ===== */
 .playground {
   background-color: var(--bg-secondary);
@@ -432,6 +484,11 @@ button.copy-btn:hover {
   border-left-color: var(--danger);
 }
 
+.callout.takeaway {
+  background-color: rgba(104, 211, 145, 0.08);
+  border-left-color: var(--success);
+}
+
 .callout strong {
   display: block;
   margin-bottom: 0.3rem;
@@ -473,6 +530,65 @@ button.copy-btn:hover {
 .sbox-demo .highlight {
   color: var(--success);
   font-weight: 700;
+}
+
+/* ===== S-box grid (16x16 table lookup animation) ===== */
+.sbox-step-label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.sbox-grid-wrap {
+  overflow-x: auto;
+  margin: 0.6rem 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.sbox-grid {
+  border-collapse: collapse;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.7rem;
+}
+
+.sbox-grid th,
+.sbox-grid td {
+  padding: 0.22rem 0.32rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  min-width: 1.9rem;
+}
+
+.sbox-grid th.sg-col-head,
+.sbox-grid th.sg-row-head,
+.sbox-grid th.sg-corner {
+  background-color: var(--bg-secondary);
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.sbox-grid td.sg-cell {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  transition: background 0.12s, color 0.12s;
+}
+
+.sbox-grid th.sg-row-hot,
+.sbox-grid th.sg-col-hot {
+  background-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+.sbox-grid td.sg-cell.sg-hot {
+  background-color: var(--accent);
+  color: var(--button-text);
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sbox-grid td.sg-cell { transition: none; }
 }
 
 /* ===== Comparison Table ===== */
@@ -613,6 +729,101 @@ button.copy-btn:hover {
   background-color: var(--accent);
 }
 
+/* ===== Round animation (SM4, Exhibit 3) ===== */
+.round-anim {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0.6rem 0 0.4rem;
+}
+
+.round-anim .ra-state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.round-anim .ra-word {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 5px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.round-anim .ra-word.consumed {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.round-anim .ra-word.rk {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.round-anim .ra-pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.round-anim .ra-stage {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+  border-radius: 5px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.round-anim .ra-stage.active {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--button-text);
+}
+
+.round-anim .ra-arrow {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.round-anim .ra-progress {
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.round-anim .ra-progress-bar {
+  display: block;
+  height: 100%;
+  width: 0;
+  background-color: var(--success);
+  transition: width 0.12s linear;
+}
+
+.ra-round-label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .round-anim .ra-progress-bar,
+  .round-anim .ra-stage {
+    transition: none;
+  }
+}
+
 /* ===== Footer ===== */
 footer {
   text-align: center;
@@ -736,6 +947,34 @@ footer a {
 .bit-cell.on {
   background-color: var(--warning);
   border-color: var(--warning);
+}
+
+/* ===== ECB penguin image demo ===== */
+.penguin-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.8rem 0;
+}
+
+.penguin-fig {
+  margin: 0;
+  text-align: center;
+}
+
+.penguin-fig canvas {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--bg-input);
+}
+
+.penguin-fig figcaption {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
 }
 
 /* ===== ECB vs CBC block stacks ===== */

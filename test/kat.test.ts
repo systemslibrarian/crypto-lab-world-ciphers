@@ -4,6 +4,7 @@ import { KNOWN_ANSWER_TESTS } from '../src/ciphers/test-vectors';
 import { ariaDiffusion, ARIA_SB1, ARIA_IS1, Aria } from '../src/ciphers/aria';
 import { Camellia } from '../src/ciphers/camellia';
 import { Kuznyechik } from '@li0ard/kuznyechik';
+import { sm4Trace } from '../src/ciphers/sm4-trace';
 import { bytesToHex, hexToBytes } from '../src/ciphers/utils';
 
 // Correctness proof: every implementation must reproduce the official vector from its
@@ -44,6 +45,27 @@ describe('ARIA involution facts (taught in Exhibit 2)', () => {
     for (let i = 0; i < 256; i++) {
       expect(ARIA_SB1[ARIA_IS1[i]]).toBe(i);
     }
+  });
+});
+
+// The SM4 round animation (Exhibit 3) shows genuine intermediate state from sm4Trace.
+// These tests pin the tracer to the official vector and to the production gm-crypto path
+// so the animation can never silently show fabricated data.
+describe('SM4 round tracer (drives Exhibit 3 animation)', () => {
+  it('final ciphertext matches the GB/T 32907-2016 §A.1 vector', () => {
+    const key = hexToBytes('0123456789abcdeffedcba9876543210');
+    const pt = hexToBytes('0123456789abcdeffedcba9876543210');
+    expect(sm4Trace(key, pt).ciphertextHex).toBe('681edf34d206965e86b3e94f536e4246');
+  });
+
+  it('emits exactly 32 real rounds and matches the production block-encrypt path', () => {
+    const key = hexToBytes('000102030405060708090a0b0c0d0e0f');
+    const block = hexToBytes('00112233445566778899aabbccddeeff');
+    const trace = sm4Trace(key, block);
+    expect(trace.steps).toHaveLength(32);
+    expect(trace.ciphertextHex).toBe(
+      bytesToHex(CIPHERS.SM4.blockEncrypt(key, block)),
+    );
   });
 });
 

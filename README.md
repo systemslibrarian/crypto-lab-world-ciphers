@@ -17,7 +17,18 @@ World Ciphers demonstrates four national symmetric block ciphers: Camellia-256 (
 
 **[systemslibrarian.github.io/crypto-lab-world-ciphers](https://systemslibrarian.github.io/crypto-lab-world-ciphers/)**
 
-All cipher outputs are real operations — no simulation. To prove it, the page opens with a **live known-answer test (KAT)** that encrypts each cipher's official vector (RFC 3713, RFC 5794, GB/T 32907-2016, GOST R 34.12-2015) in your browser and checks it byte-for-byte against the published ciphertext. The same vectors gate `npm test`. Exhibits include a **Verified** KAT panel, interactive **Camellia-256** encrypt/decrypt with AES-256-CBC side by side, **ARIA-256** showing where its involution actually lives (the diffusion layer, not the S-boxes), **SM4** with the honest post-quantum key-size warning and geopolitical context, **Kuznyechik** with the Perrin et al. (2019) S-box transparency controversy documented, an **Avalanche Effect** panel (flip one input bit, watch about 50% of ciphertext bits change), an **ECB vs CBC** "ECB penguin" demonstration, and a **Four-Way Comparison** table with a decision tree.
+All cipher outputs are real operations — no simulation. To prove it, the page opens with a **live known-answer test (KAT)** that encrypts each cipher's official vector (RFC 3713, RFC 5794, GB/T 32907-2016, GOST R 34.12-2015) in your browser and checks it byte-for-byte against the published ciphertext. The same vectors gate `npm test`.
+
+The demo now opens with a **Start Here** vocabulary panel that defines block, key, round, S-box, SPN, Feistel, involution, and diffusion layer in one plain sentence each, and every jargon term in the exhibits links back to it. Exhibits are:
+
+1. **Verified** — the live KAT panel described above, with a pass count and a re-run button.
+2. **Camellia-256** — interactive encrypt/decrypt with AES-256-CBC side by side, plus a stated takeaway: different ciphertext for identical inputs means the two parties must agree on the algorithm to interoperate, and "different-looking output" is not evidence of more security.
+3. **ARIA-256** — shows where ARIA's involution actually lives (the diffusion layer, not the S-boxes), with involution defined plainly up front and an **animated 16×16 S-box lookup** that traces S₁, then S₁ again (landing elsewhere — the proof it is not an involution), then S₁⁻¹ back to the input.
+4. **SM4** — the honest post-quantum key-size warning and geopolitical context, plus a **round animation** that runs the genuine 32-round Feistel/T-transform pipeline (substitute → mix → add-round-key) over the live state you just encrypted, so the round count is shown, not merely asserted. The animation is driven by a spec-accurate tracer whose final output is checked against the GB/T 32907-2016 vector in `npm test`.
+5. **Kuznyechik** — the Perrin et al. (2019) S-box transparency controversy documented.
+6. **Avalanche Effect** — flip one input bit, watch about 50% of ciphertext bits change.
+7. **ECB vs CBC** — the raw-block hex view *and* the actual **"ECB penguin" image demonstration**: a small picture is encrypted with a real block cipher, and the ECB ghost survives while CBC turns it to noise.
+8. **Four-Way Comparison** — a comparison table with a decision tree.
 
 ## What Can Go Wrong
 - ECB mode leaks structure: identical plaintext blocks produce identical ciphertext blocks (the "ECB penguin"), so a confidential mode like CBC or an AEAD mode is required.
