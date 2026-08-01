@@ -15,6 +15,14 @@
   --accent-hover: #90cdf4;
   --accent-dim: rgba(99, 179, 237, 0.15);
   --border: #2d3748;
+  /* Control boundaries only (WCAG 2.1 SC 1.4.11). select / input / textarea are
+     filled with --bg-input (#252a3a), which is only 1.17:1 against --bg-card and
+     1.25:1 against --bg-secondary, so the border is the sole boundary of the
+     control. #6d7a91 clears 3:1 everywhere a field sits: 4.35:1 on --bg-primary,
+     3.85:1 on --bg-secondary, 3.63:1 on --bg-card, 3.29:1 on the --bg-input fill
+     itself. --border stays as-is for decorative rules (card outlines, table and
+     section rules, output frames). */
+  --border-strong: #6d7a91;
   --border-hover: #4a5568;
   --button-text: #0f1117; /* white on #63b3ed is 2.3:1 — dark ink clears AA */
   --success: #68d391;
@@ -47,6 +55,12 @@
   --accent-hover: #2c5282;
   --accent-dim: rgba(43, 108, 176, 0.1);
   --border: #e2e8f0;
+  /* See --border-strong in the dark block. Light fields are filled with
+     --bg-input (#f0f4f8) — 1.06:1 against --bg-card, 1.02:1 against
+     --bg-secondary — so the boundary is entirely the border's job. #78838f is
+     3.86:1 on --bg-card, 3.68:1 on --bg-primary, 3.43:1 on --bg-secondary and
+     3.49:1 on the --bg-input fill (was #e2e8f0 at 1.23:1, worst case 1.09:1). */
+  --border-strong: #78838f;
   --border-hover: #cbd5e0;
   --button-text: #ffffff;
   --success: #276749;
@@ -354,7 +368,7 @@ input[type="text"],
 textarea {
   background-color: var(--bg-input);
   color: var(--text-primary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
