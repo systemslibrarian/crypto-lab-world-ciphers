@@ -112,7 +112,6 @@ body {
 ::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 4px; }
 
 /* ===== Header ===== */
-/* BEGIN cl-hero standard — managed, keep in sync across fleet */
 .cl-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:clamp(1rem,4vw,3rem);flex-wrap:wrap;margin:clamp(1rem,3vw,2rem) 0 1.5rem;}
 .cl-hero-main{flex:1 1 22rem;min-width:min(100%,20rem);}
 .cl-hero-title{margin:0;font-size:clamp(1.6rem,3.8vw,2.7rem);font-weight:700;line-height:1.1;letter-spacing:.01em;color:var(--text-primary);}
@@ -121,8 +120,7 @@ body {
 .cl-hero-why{flex:0 1 min(40%,26rem);min-width:min(100%,15rem);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.05rem;background:color-mix(in oklab,var(--accent) 6%,transparent);}
 .cl-hero-why-label{display:block;font-size:.68rem;font-weight:700;letter-spacing:.14em;color:var(--accent);}
 .cl-hero-why-text{margin:.35rem 0 0;font-size:.95rem;line-height:1.5;color:var(--text-primary);}
-@media (max-width:640px){.cl-hero{flex-direction:column;}.cl-hero-why{flex-basis:auto;width:100%;}}
-/* END cl-hero standard */
+@media (max-width:640px){.cl-hero{flex-direction:column;}.cl-hero-why{flex-basis:auto;width:100%;}.cl-hero-main{flex-basis:auto;min-width:0;}}
 
 /* Align hero with the main content column (this demo renders the hero as a
    full-width band above <main>). */
@@ -361,6 +359,7 @@ textarea {
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
   font-family: inherit;
+  min-height: 44px;
   transition: border-color 0.2s;
 }
 
@@ -402,6 +401,7 @@ button {
   padding: 0.5rem 1.1rem;
   font-size: 0.88rem;
   font-weight: 600;
+  min-height: 44px;
   cursor: pointer;
   transition: background 0.2s;
 }
