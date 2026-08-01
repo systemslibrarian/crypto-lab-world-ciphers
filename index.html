@@ -357,7 +357,7 @@
       <h2><span class="flag">🇰🇷</span> Exhibit 2 — ARIA-256</h2>
       <div class="origin">
         <strong>South Korea</strong> · NSRI (Korean academic consortium), 2003<br>
-        Korean Standard KS X 1213 · ISO/IEC 18033-3 · IETF RFC 5794<br>
+        Korean Standard KS X 1213 · IETF RFC 5794 (not in ISO/IEC 18033-3)<br>
         Structure: <a href="#term-spn" class="jargon">SPN</a> (like AES) with an
         <a href="#term-involution" class="jargon">involutory</a>
         <a href="#term-diffusion" class="jargon">diffusion layer</a><br>
@@ -483,7 +483,7 @@
       <h2><span class="flag">🇨🇳</span> Exhibit 3 — SM4</h2>
       <div class="origin">
         <strong>China</strong> · OSCCA (Office of State Commercial Cryptography Administration), 2006<br>
-        GB/T 32907-2016 · ISO/IEC 18033-3<br>
+        GB/T 32907-2016 · ISO/IEC 18033-3 (Amendment 1:2021)<br>
         Structure: 32-<a href="#term-round" class="jargon">round</a> non-balanced
         <a href="#term-feistel" class="jargon">Feistel network</a> with a nonlinear T-transform
         (its <a href="#term-sbox" class="jargon">S-box</a> plus mixing)<br>
@@ -590,7 +590,8 @@
       <h2><span class="flag">🇷🇺</span> Exhibit 4 — Kuznyechik</h2>
       <div class="origin">
         <strong>Russia</strong> · FSB (Federal Security Service), 2015<br>
-        GOST R 34.12-2015 · ISO/IEC 18033-3<br>
+        GOST R 34.12-2015 · IETF RFC 7801 (Informational) · <strong>not</strong> in ISO/IEC 18033-3 —
+        the amendment proposing it was withdrawn over the S-box concerns below<br>
         Replaces the older GOST 28147-89 block cipher<br>
         Structure: <a href="#term-spn" class="jargon">SPN</a> — a 10-<a href="#term-round" class="jargon">round</a>
         substitution-permutation network<br>
@@ -623,7 +624,9 @@
       <div class="callout danger">
         <strong>🔴 S-box Controversy — Mandatory Disclosure</strong>
         <p>Kuznyechik's S-box was published <strong>without any design rationale</strong>.
-        In 2019, independent researchers (Léo Perrin et al.) discovered that the S-box has an
+        Independent researchers found hidden structure in it — first Biryukov, Perrin and Udovenko
+        (EUROCRYPT 2016), then Léo Perrin's "Partitions in the S-Box of Streebog and Kuznyechik"
+        (IACR ToSC 2019). They showed the S-box has an
         unusual hidden structure — it can be decomposed in ways that suggest it was <strong>not
         generated randomly</strong>, but was constructed using an undisclosed process. The FSB has
         not responded to these findings.</p>
@@ -802,9 +805,9 @@
             <tr><th scope="row">Block size</th><td>128-bit</td><td>128-bit</td><td>128-bit</td><td>128-bit</td></tr>
             <tr><th scope="row">Key sizes</th><td>128 / 192 / 256</td><td>128 / 192 / 256</td><td>128 only</td><td>256 only</td></tr>
             <tr><th scope="row">Structure</th><td>Feistel + SPN</td><td>SPN</td><td>Feistel</td><td>SPN</td></tr>
-            <tr><th scope="row">ISO/IEC 18033-3</th><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+            <tr><th scope="row">ISO/IEC 18033-3</th><td class="check">✓</td><td class="cross">✗</td><td class="check">✓ Amd 1:2021</td><td class="cross">✗ withdrawn</td></tr>
             <tr><th scope="row">TLS cipher suite (RFC)</th><td class="check">✓ 5932</td><td class="check">✓ 6209</td><td class="check">✓ 8998 (TLS 1.3)</td><td class="partial">✓ 9189 (TLS 1.2)</td></tr>
-            <tr><th scope="row">IETF status</th><td class="check">Standards Track</td><td class="check">Standards Track</td><td class="partial">Informational</td><td class="cross">Not endorsed</td></tr>
+            <tr><th scope="row">IETF status</th><td class="check">Standards Track</td><td class="partial">Informational</td><td class="partial">Informational</td><td class="cross">Informational (not endorsed)</td></tr>
             <tr><th scope="row">Design transparency</th><td class="check">✓ Full</td><td class="check">✓ Full</td><td class="partial">Partial</td><td class="cross">✗ S-box opaque</td></tr>
             <tr><th scope="row">PQ security (128-bit key)</th><td class="check">✓</td><td class="check">✓</td><td class="cross">✗ (64-bit PQ)</td><td class="check">✓</td></tr>
             <tr><th scope="row">Use when</th><td>AES alternative</td><td>Korean compliance</td><td>China compliance</td><td>Russian compliance</td></tr>
