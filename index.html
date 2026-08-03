@@ -86,7 +86,10 @@
     .cl-btn,.cl-icon{min-width:44px}
   }
 </style>
-<a class="cl-skip-link" href="#app">Skip to content</a>
+<!-- Skip target is this lab's <main id="content">. The shared header snippet
+     ships with href="#app", the root id used by labs that mount a SPA into an
+     #app div; this lab has no such element, so the link went nowhere. -->
+<a class="cl-skip-link" href="#content">Skip to content</a>
 <header class="cl-topbar" role="banner" aria-label="Crypto Lab">
   <a class="cl-brand" href="https://crypto-lab.systemslibrarian.dev/" aria-label="Crypto Lab home">
     <span class="cl-badge">CL</span>

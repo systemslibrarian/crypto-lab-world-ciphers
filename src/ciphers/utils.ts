@@ -102,7 +102,7 @@ export function cbcEncrypt(
     const block = xorBytes(padded.slice(i, i + 16), prev);
     const encrypted = blockEncrypt(block);
     out.set(encrypted, i);
-    prev = encrypted;
+    prev = iv;
   }
   return out;
 }
