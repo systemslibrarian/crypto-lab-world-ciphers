@@ -248,7 +248,14 @@
         <button id="kat-run" type="button">Re-run all tests</button>
         <span id="kat-summary" class="kat-summary" role="status" aria-live="polite"></span>
       </div>
-      <div class="kat-table-wrapper">
+      <!-- role + tabindex, not just overflow-x: the table has min-width:640px, so
+           below ~700px it scrolls horizontally and there is nothing focusable
+           inside it. A scrolling region with no keyboard route is a WCAG 2.1.1
+           failure that only exists at phone width. role="region" is what makes
+           the aria-label legal — on a role-less div it would be prohibited and
+           silently discarded. -->
+      <div class="kat-table-wrapper" role="region" tabindex="0"
+           aria-label="Known-answer test results, scrollable">
         <table class="kat-table">
           <caption class="sr-only">Live known-answer test results for each cipher</caption>
           <thead>
@@ -807,7 +814,10 @@
       <h2><span class="flag">📊</span> Exhibit 7 — Four-Way Comparison</h2>
 
       <h3>Comparison Table</h3>
-      <div class="comparison-table-wrapper">
+      <!-- Same WCAG 2.1.1 fix as the KAT table above; this one is min-width:700px
+           and holds no focusable content at all. -->
+      <div class="comparison-table-wrapper" role="region" tabindex="0"
+           aria-label="Four-way cipher comparison, scrollable">
         <table class="comparison-table">
           <caption class="sr-only">Side-by-side comparison of Camellia-256, ARIA-256, SM4, and Kuznyechik properties</caption>
           <thead>

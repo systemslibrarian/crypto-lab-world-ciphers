@@ -14,14 +14,24 @@
   --accent: #63b3ed;
   --accent-hover: #90cdf4;
   --accent-dim: rgba(99, 179, 237, 0.15);
+  /* Ink for text painted ON the --accent-dim tint rather than on a panel.
+     --accent itself is only 4.25:1 there in the light theme (it is 5.29:1 on the
+     dark tint), so the two places that pair them — .exhibit-nav a:hover and the
+     S-box grid's hot row/column headers — need an ink a step further from the
+     surface. Moving toward the light end in dark and the dark end in light gets
+     both to 6.2:1 or better. */
+  --accent-on-dim: #90cdf4;
   --border: #2d3748;
-  /* Control boundaries only (WCAG 2.1 SC 1.4.11). select / input / textarea are
-     filled with --bg-input (#252a3a), which is only 1.17:1 against --bg-card and
-     1.25:1 against --bg-secondary, so the border is the sole boundary of the
-     control. #6d7a91 clears 3:1 everywhere a field sits: 4.35:1 on --bg-primary,
-     3.85:1 on --bg-secondary, 3.63:1 on --bg-card, 3.29:1 on the --bg-input fill
-     itself. --border stays as-is for decorative rules (card outlines, table and
-     section rules, output frames). */
+  /* Every CONTROL BOUNDARY on the page (WCAG 2.1 SC 1.4.11). select / input /
+     textarea are filled with --bg-input (#252a3a), which is only 1.17:1 against
+     --bg-card and 1.25:1 against --bg-secondary, so the border is the sole
+     boundary of the control. #6d7a91 clears 3:1 everywhere a field sits: 4.35:1
+     on --bg-primary, 3.85:1 on --bg-secondary, 3.63:1 on --bg-card, 3.29:1 on
+     the --bg-input fill itself.
+     button.copy-btn is filled the same way and belongs to the same set — it drew
+     its edge from --border until this was measured, which is 1.39:1 against the
+     panel behind it, i.e. no boundary at all. --border stays for DECORATIVE
+     rules only: card outlines, table and section rules, output frames. */
   --border-strong: #6d7a91;
   --border-hover: #4a5568;
   --button-text: #0f1117; /* white on #63b3ed is 2.3:1 — dark ink clears AA */
@@ -54,9 +64,13 @@
   --accent: #2b6cb0;
   --accent-hover: #2c5282;
   --accent-dim: rgba(43, 108, 176, 0.1);
+  /* See --accent-on-dim in the dark block. --accent on the light --accent-dim
+     tint (which composites to rgb(218,229,240) over --bg-secondary) is 4.25:1 —
+     a real 1.4.3 failure; #2c5282 is 6.23:1 there. */
+  --accent-on-dim: #2c5282;
   --border: #e2e8f0;
-  /* See --border-strong in the dark block. Light fields are filled with
-     --bg-input (#f0f4f8) — 1.06:1 against --bg-card, 1.02:1 against
+  /* See --border-strong in the dark block. Light fields and copy buttons are
+     filled with --bg-input (#f0f4f8) — 1.06:1 against --bg-card, 1.02:1 against
      --bg-secondary — so the boundary is entirely the border's job. #78838f is
      3.86:1 on --bg-card, 3.68:1 on --bg-primary, 3.43:1 on --bg-secondary and
      3.49:1 on the --bg-input fill (was #e2e8f0 at 1.23:1, worst case 1.09:1). */
@@ -195,6 +209,10 @@ main {
 
 .exhibit-nav a:hover {
   background-color: var(--accent-dim);
+  /* On the --accent-dim tint, --accent measures 4.25:1 in the light theme — a
+     1.4.3 failure in the state a reader is in whenever the pointer is on a nav
+     link. --accent-on-dim is 6.23:1 light and 7.03:1 dark. */
+  color: var(--accent-on-dim);
 }
 
 /* ===== Exhibit Sections ===== */
@@ -382,10 +400,24 @@ select {
      color on selects (reported as black-on-dark by axe). */
   appearance: none;
   padding-right: 1.8rem;
+  /* `appearance: none` removes the UA's own dropdown affordance, so this chevron
+     is the ONLY thing on screen saying a <select> is a <select> — a meaningful
+     graphic under SC 1.4.11, needing 3:1 against the --bg-input fill it is drawn
+     on. #8b949e is 5.39:1 on the dark fill. It is 2.78:1 on the light one, which
+     is why the light theme overrides it below with its own stroke.
+     No oracle can check this: a data-URI background-image is not an element, not
+     a text node and not a gradient, so axe, the arithmetic contrast walk and the
+     non-text audit all step over it. Both numbers are hand-measured. */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%238b949e' stroke-width='2' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.6rem center;
   cursor: pointer;
+}
+
+/* #78838f is 3.49:1 on the light --bg-input fill (#f0f4f8), clearing 1.4.11;
+   the shared #8b949e was 2.78:1 there. */
+[data-theme="light"] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%2378838f' stroke-width='2' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
 }
 
 select:focus,
@@ -436,13 +468,22 @@ textarea:focus-visible {
 button.copy-btn {
   background-color: var(--bg-input);
   color: var(--text-secondary);
-  border: 1px solid var(--border);
+  /* --border-strong, not --border: this fill is within 1.25:1 of every panel it
+     sits on, so the edge IS the control's only boundary (SC 1.4.11). With
+     --border it measured 1.39:1 in dark and 1.09:1 in light; with
+     --border-strong it is 3.63-3.85:1 in dark and 3.43-3.86:1 in light,
+     depending on which panel the button lands on. */
+  border: 1px solid var(--border-strong);
   padding: 0.35rem 0.7rem;
   font-size: 0.8rem;
 }
 
 button.copy-btn:hover {
-  border-color: var(--border-hover);
+  /* --border-hover is a decorative step and does not clear 3:1 here (2.22:1 dark,
+     1.32:1 light) — and hover is the state a reader is in the instant before
+     every click, so it cannot be the one where the boundary disappears. --accent
+     is 7.31:1 dark and 4.81:1 light against the panel behind it. */
+  border-color: var(--accent);
   color: var(--text-primary);
 }
 
@@ -560,6 +601,18 @@ button.copy-btn:hover {
   border-radius: 8px;
 }
 
+/* WCAG 2.4.7. All three of this page's horizontal scrollers carry tabindex="0"
+   so their oversized tables can be scrolled from the keyboard (2.1.1) — and
+   anything given tabindex="0" needs a visible focus indicator. Without this rule
+   they fall back to the UA's own ring, which is real but is not the page's, and
+   which a future `outline: none` elsewhere could silently remove. */
+.kat-table-wrapper:focus-visible,
+.comparison-table-wrapper:focus-visible,
+.sbox-grid-wrap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .sbox-grid {
   border-collapse: collapse;
   font-family: 'Consolas', 'Monaco', monospace;
@@ -592,7 +645,12 @@ button.copy-btn:hover {
 .sbox-grid th.sg-row-hot,
 .sbox-grid th.sg-col-hot {
   background-color: var(--accent-dim);
-  color: var(--accent);
+  /* Same pair, same tint, same 4.25:1 in light as .exhibit-nav a:hover — but
+     this one sits inside `#aria-sbox-grid`, which is aria-hidden, so BOTH the
+     axe rule and the arithmetic walk skip it by convention. 1.4.3 governs what a
+     sighted reader sees, and aria-hidden does not excuse it; the ratio was found
+     by hand and is 6.23:1 light / 7.03:1 dark with this token. */
+  color: var(--accent-on-dim);
 }
 
 .sbox-grid td.sg-cell.sg-hot {
@@ -923,6 +981,18 @@ footer a {
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* The pass/fail colour has to be restated at this specificity or it never
+   paints. `.kat-pass` is (0,1,0) and `.kat-table td` below is (0,1,1), so inside
+   the table the td rule won and every result cell rendered in --text-secondary —
+   the green and red were declared and silently discarded. (The #kat-summary
+   span, which is not a td, kept its colour, which is what made the loss easy to
+   miss.) The glyph and the word carry the result on their own, so this was never
+   a colour-only cue, but a declaration that does nothing is a bug either way.
+   Measured after restoring, against the --bg-card the table sits on:
+   --success 8.47:1 dark / 6.73:1 light, --danger 6.44:1 dark / 5.47:1 light. */
+.kat-table td.kat-pass { color: var(--success); }
+.kat-table td.kat-fail { color: var(--danger); }
 
 .kat-table .kat-hex {
   font-family: 'Consolas', 'Monaco', monospace;
