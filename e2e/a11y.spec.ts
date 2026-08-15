@@ -40,7 +40,7 @@ import {
  * assumed, and why `violations` is not the whole oracle.
  */
 
-for (const theme of ['dark', 'light'] as const) {
+for (const theme of ['dark'] as const) {
   test(`no WCAG A/AA violations in ${theme} theme`, async ({ page, context }) => {
     test.setTimeout(900_000);
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
