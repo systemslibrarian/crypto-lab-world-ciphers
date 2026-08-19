@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/systemslibrarian/crypto-lab-world-ciphers#readme",
   "devDependencies": {
-    "@axe-core/playwright": "^4.12.1",
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.62.1",
     "gh-pages": "^6.3.0",
     "typescript": "^5.9.3",
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@li0ard/kuznyechik": "^0.1.5",
-    "@noble/ciphers": "^2.2.0",
+    "@noble/ciphers": "^2.3.0",
     "gm-crypto": "^0.1.12"
   }
 }
