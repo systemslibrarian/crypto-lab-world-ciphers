@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -69,6 +69,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write   # required by the deploy dispatch; without it gh workflow run 403s
     steps:
       - id: meta
         uses: dependabot/fetch-metadata@v3
