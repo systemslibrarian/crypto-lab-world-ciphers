@@ -18,7 +18,6 @@ concurrency:
 
 jobs:
   build:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,14 +45,17 @@ jobs:
         run: npm run test:a11y
 
       - name: Setup Pages
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v6
 
       - name: Upload artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./dist
 
       - name: Deploy
+        if: github.event_name != 'pull_request'
         id: deployment
         uses: actions/deploy-pages@v5
 
