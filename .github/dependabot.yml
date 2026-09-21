@@ -18,8 +18,9 @@
 # Pages v5/v6 jumps were verified green across all 176 repos on 2026-08-18.
 #
 # EVERY Dependabot pull request here -- both groups and every ungrouped major --
-# merges itself once this lab's own gate passes on it. Nothing in this repo reads
-# a bump's update-type. See the dependabot-auto-merge job in the deploy workflow,
+# merges itself once this lab's own gate passes on it.
+# The auto-merge job filters on author, not bump type.
+# Nothing in this repo reads a bump's update-type. See the dependabot-auto-merge job in the deploy workflow,
 # which is where that decision actually lives.
 version: 2
 updates:
