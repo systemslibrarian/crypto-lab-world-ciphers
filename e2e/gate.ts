@@ -208,8 +208,9 @@ export async function assertSingleBanner(page: Page): Promise<void> {
  * The defaults are asserted at length because this lab ships almost entirely
  * POPULATED — the opposite of most labs in this fleet. Four of its exhibits run
  * themselves on load (`runKnownAnswerTests()`, `runAvalanche()`, `runMode()`,
- * `runPenguin()`), the SM4 round animation is seeded to round 1, four key fields
- * are filled with fresh random hex, and the 16x16 S-box grid is rendered. So the
+ * `runPenguin()`), the SM4 round animation is seeded to round 1, seven key
+ * fields and two IV fields are filled with fresh random hex, five round-dot
+ * tallies are drawn, and the 16x16 S-box grid is rendered. So the
  * arrival state is a real, dense, measurable page, and every one of those
  * generators is a place where a silent failure would leave a plausible-looking
  * blank that no `violations` array would ever mention.
@@ -244,8 +245,8 @@ export async function boot(page: Page, theme: 'dark' | 'light'): Promise<void> {
   await expect(page.locator('#theme-toggle')).toBeHidden();
 
   // ── Exhibit "Verified": the KAT table runs itself on load ────────────────
-  await expect(page.locator('#kat-summary')).toHaveText('7/7 vectors reproduced exactly');
-  await expect(page.locator('#kat-tbody tr')).toHaveCount(7);
+  await expect(page.locator('#kat-summary')).toHaveText('10/10 vectors reproduced exactly');
+  await expect(page.locator('#kat-tbody tr')).toHaveCount(10);
   await expect(page.locator('#kat-tbody td.kat-fail')).toHaveCount(0);
 
   // ── Exhibit 1, Camellia: CBC and 256-bit by default, keys auto-generated ──
@@ -277,7 +278,28 @@ export async function boot(page: Page, theme: 'dark' | 'light'): Promise<void> {
   expect((await page.inputValue('#kuz-key')).length, 'Kuznyechik key auto-generated').toBe(64);
   await expect(page.locator('#kuz-output')).toHaveText('Output will appear here');
 
-  // ── Exhibit 5, avalanche: 128 bit choices, and it has already run ────────
+  // ── Exhibit 5, Kalyna: 256-bit key, 14 rounds (DSTU 7624:2014 Table 1) ───
+  expect((await page.inputValue('#kal-key')).length, 'Kalyna key auto-generated').toBe(64);
+  await expect(page.locator('#kal-rounds')).toHaveAttribute('aria-label', '14 rounds');
+  await expect(page.locator('#kal-rounds .round-dot')).toHaveCount(14);
+  await expect(page.locator('#kal-output')).toHaveText('Output will appear here');
+
+  // ── Exhibit 6, BelT: 256-bit key, 8 rounds (STB 34.101.31 6.1.3) ─────────
+  expect((await page.inputValue('#belt-key')).length, 'BelT key auto-generated').toBe(64);
+  await expect(page.locator('#belt-rounds')).toHaveAttribute('aria-label', '8 rounds');
+  await expect(page.locator('#belt-rounds .round-dot')).toHaveCount(8);
+  await expect(page.locator('#belt-output')).toHaveText('Output will appear here');
+
+  // ── Exhibit 7, SEED: 128-bit key AND an IV, 16 rounds (RFC 4269 1.2) ─────
+  // The IV field is the one thing here no other fixed-key panel has; it exists
+  // because SEED is driven in CBC, so a missing seed would break decrypt only.
+  expect((await page.inputValue('#seed-key')).length, 'SEED key auto-generated').toBe(32);
+  expect((await page.inputValue('#seed-iv')).length, 'SEED IV auto-generated').toBe(32);
+  await expect(page.locator('#seed-rounds')).toHaveAttribute('aria-label', '16 rounds');
+  await expect(page.locator('#seed-rounds .round-dot')).toHaveCount(16);
+  await expect(page.locator('#seed-output')).toHaveText('Output will appear here');
+
+  // ── Exhibit 8, avalanche: 128 bit choices, and it has already run ────────
   await expect(page.locator('#av-flip option')).toHaveCount(128);
   await expect(page.locator('#av-flip')).toHaveValue('0');
   await expect(page.locator('#av-summary')).toHaveText(
@@ -285,7 +307,7 @@ export async function boot(page: Page, theme: 'dark' | 'light'): Promise<void> {
   );
   await expect(page.locator('#av-grid .bit-cell')).toHaveCount(128);
 
-  // ── Exhibit 6, ECB vs CBC: also already run, and the leak is real ─────────
+  // ── Exhibit 9, ECB vs CBC: also already run, and the leak is real ─────────
   // All three ECB blocks identical, no two CBC blocks alike, is the entire claim
   // of the exhibit. Asserting it at boot means a scan of "the ECB leak" cannot
   // pass while measuring a page that is not showing one.
@@ -303,7 +325,7 @@ export async function boot(page: Page, theme: 'dark' | 'light'): Promise<void> {
  * Assert the page does not require horizontal scrolling.
  *
  * WCAG 1.4.10 (Reflow, AA). axe has no rule for this at all, and this page is
- * exactly the shape that breaks it: a 700px-minimum four-way comparison table, a
+ * exactly the shape that breaks it: a 700px-minimum seven-way comparison table, a
  * 640px-minimum KAT table, a 16x16 S-box grid, and hex strings long enough to
  * need `word-break`. Each of the three tables is meant to scroll inside its own
  * wrapper; the assertion here is that none of them scrolls the DOCUMENT.
@@ -545,8 +567,9 @@ export function expectBaselineNotStale(): void {
  *    `aria-prohibited-attr`, which is where an `aria-label` on a role-less
  *    element hides, a defect that never reaches the violations array at all. This
  *    page depends on getting that right in two places: `fillRoundDots()` sets
- *    `role="img"` alongside the `aria-label` it writes on `#cam-rounds` and
- *    `#sm4-rounds`, and `.sbox-grid-wrap` carries `role="img"` with its label.
+ *    `role="img"` alongside the `aria-label` it writes on `#cam-rounds`,
+ *    `#sm4-rounds`, `#kal-rounds`, `#belt-rounds` and `#seed-rounds`, and
+ *    `.sbox-grid-wrap` carries `role="img"` with its label.
  *    Drop either role and the label is silently discarded.
  *  - arithmetic contrast — composite-aware WCAG 1.4.3 over every text node.
  *  - non-text contrast and generated content — SC 1.4.11, ratcheted; see
@@ -623,8 +646,8 @@ export async function scan(page: Page, label: string): Promise<void> {
 
 // ── The drive ───────────────────────────────────────────────────────────────
 
-/** The four ciphers, in the order their `<option>` values appear. */
-const CIPHERS = ['Camellia', 'ARIA', 'SM4', 'Kuznyechik'] as const;
+/** The seven ciphers, in the order their `<option>` values appear. */
+const CIPHERS = ['Camellia', 'ARIA', 'SM4', 'Kuznyechik', 'Kalyna', 'BelT', 'SEED'] as const;
 
 /**
  * Drive the lab through the states that render content, scanning each.
@@ -684,9 +707,9 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
 
   // ── Verified correctness: re-run the KAT battery ─────────────────────────
   await page.click('#kat-run');
-  await expect(page.locator('#kat-summary')).toHaveText('7/7 vectors reproduced exactly');
-  await expect(page.locator('#kat-tbody tr')).toHaveCount(7);
-  await scanAt('KAT battery re-run, seven vectors reproduced');
+  await expect(page.locator('#kat-summary')).toHaveText('10/10 vectors reproduced exactly');
+  await expect(page.locator('#kat-tbody tr')).toHaveCount(10);
+  await scanAt('KAT battery re-run, ten vectors reproduced');
 
   // The section nav's hover ink, which sits on `--accent-dim` rather than on the
   // panel it was measured against.
@@ -853,7 +876,57 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   );
   await scanAt('Kuznyechik key rejected');
 
-  // ── Exhibit 5: avalanche, all four ciphers plus the extremes ─────────────
+  // ── Exhibit 5: Kalyna ────────────────────────────────────────────────────
+  await page.click('#kal-encrypt');
+  await expect(page.locator('#kal-output .hex')).toHaveText(/^[0-9a-f]{64}$/);
+  await scanAt('Kalyna-128/256 encrypted');
+
+  await page.click('#kal-decrypt');
+  await expect(page.locator('#kal-output .plaintext-result')).toHaveText('Hello from Ukraine!');
+  await scanAt('Kalyna round-trip, plaintext recovered');
+
+  await page.fill('#kal-key', 'nope');
+  await page.click('#kal-encrypt');
+  await expect(page.locator('#kal-output .error-msg')).toHaveText(
+    'Kalyna key must be exactly 64 hex characters'
+  );
+  await scanAt('Kalyna key rejected');
+
+  // ── Exhibit 6: BelT ──────────────────────────────────────────────────────
+  await page.click('#belt-encrypt');
+  await expect(page.locator('#belt-output .hex')).toHaveText(/^[0-9a-f]{64}$/);
+  await scanAt('BelT-256 encrypted');
+
+  await page.click('#belt-decrypt');
+  await expect(page.locator('#belt-output .plaintext-result')).toHaveText('Hello from Belarus!');
+  await scanAt('BelT round-trip, plaintext recovered');
+
+  await page.fill('#belt-key', 'nope');
+  await page.click('#belt-encrypt');
+  await expect(page.locator('#belt-output .error-msg')).toHaveText(
+    'BelT key must be exactly 64 hex characters'
+  );
+  await scanAt('BelT key rejected');
+
+  // ── Exhibit 7: SEED, the one CBC panel and the only second IV field ──────
+  await page.click('#seed-encrypt');
+  await expect(page.locator('#seed-output .hex')).toHaveText(/^[0-9a-f]{64}$/);
+  await scanAt('SEED encrypted in CBC');
+
+  await page.click('#seed-decrypt');
+  await expect(page.locator('#seed-output .plaintext-result')).toHaveText('Hello from Korea!');
+  await scanAt('SEED round-trip, plaintext recovered');
+
+  // The IV is a separate parse with its own message, so a key-only error would
+  // never reach it. Drive the IV branch specifically.
+  await page.fill('#seed-iv', 'nope');
+  await page.click('#seed-encrypt');
+  await expect(page.locator('#seed-output .error-msg')).toHaveText(
+    'SEED IV must be exactly 32 hex characters'
+  );
+  await scanAt('SEED IV rejected');
+
+  // ── Exhibit 8: avalanche, all seven ciphers plus the extremes ────────────
   for (const cipher of CIPHERS) {
     await page.selectOption('#av-cipher', cipher);
     await expect(page.locator('#av-summary')).toHaveText(
@@ -875,7 +948,7 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   await expect(page.locator('#av-summary')).toHaveText(/^\d+ of 128/);
   await scanAt('avalanche re-keyed with a fresh random block');
 
-  // ── Exhibit 6: ECB vs CBC, both the hex rows and the image ───────────────
+  // ── Exhibit 9: ECB vs CBC, both the hex rows and the image ───────────────
   // `.cipher-block.repeat` is the danger-tinted surface — a composited state
   // whose muted `.block-label` ink was never measured against it.
   for (const cipher of ['ARIA', 'Kuznyechik'] as const) {

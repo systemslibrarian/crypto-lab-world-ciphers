@@ -16,8 +16,14 @@ import { expect, test, type Page } from '@playwright/test';
 /**
  * Official vectors from each cipher's defining standard. These are external
  * ground truth, NOT copied from the app: RFC 3713 Appendix A (Camellia),
- * RFC 5794 (ARIA), GB/T 32907-2016 Appendix A.1 (SM4) and GOST R 34.12-2015 /
- * RFC 7801 (Kuznyechik).
+ * RFC 5794 (ARIA), GB/T 32907-2016 Appendix A.1 (SM4), GOST R 34.12-2015 /
+ * RFC 7801 (Kuznyechik), DSTU 7624:2014 Annex B B.2.7 (Kalyna),
+ * STB 34.101.31-2020 Annex A A.1 Table A.1 (BelT) and RFC 4269 Appendix B.1
+ * (SEED).
+ *
+ * Transcribed from the standards themselves, not from `src/ciphers/test-vectors.ts`.
+ * That is the whole point: a test that imported the app's own table would agree
+ * with a corrupted vector as happily as with a correct one.
  */
 const OFFICIAL_VECTORS: Record<string, { source: string; ciphertext: string }> = {
   'Camellia-128': { source: 'RFC 3713 §A', ciphertext: '67673138549669730857065648eabe43' },
@@ -29,6 +35,18 @@ const OFFICIAL_VECTORS: Record<string, { source: string; ciphertext: string }> =
   'Kuznyechik-256': {
     source: 'GOST R 34.12-2015 / RFC 7801',
     ciphertext: '7f679d90bebc24305a468d42b9d4edcd',
+  },
+  'Kalyna-128/256': {
+    source: 'DSTU 7624:2014 Annex B, B.2.7',
+    ciphertext: '58ec3e091000158a1148f7166f334f14',
+  },
+  'BelT-256': {
+    source: 'STB 34.101.31-2020 Annex A, A.1',
+    ciphertext: '69cca1c93557c9e3d66bc3e0fa88fa6e',
+  },
+  'SEED-128': {
+    source: 'RFC 4269 Appendix B.1',
+    ciphertext: '5ebac6e0054e166819aff1cc6d346cdb',
   },
 };
 
@@ -51,9 +69,15 @@ const PANELS: Panel[] = [
   { id: 'aria', name: 'ARIA', keySizes: ['128', '192', '256'], wrongKey: 'b2'.repeat(32) },
   { id: 'sm4', name: 'SM4', keyHexChars: 32, wrongKey: 'c3'.repeat(16) },
   { id: 'kuz', name: 'Kuznyechik', keyHexChars: 64, wrongKey: 'd4'.repeat(32) },
+  { id: 'kal', name: 'Kalyna', keyHexChars: 64, wrongKey: 'e5'.repeat(32) },
+  { id: 'belt', name: 'BelT', keyHexChars: 64, wrongKey: 'f6'.repeat(32) },
+  // SEED is the one panel driven in CBC, so its ciphertext is still exactly
+  // PKCS#7-padded length: the IV lives in its own field rather than being
+  // prepended, the same shape Camellia's CBC row uses.
+  { id: 'seed', name: 'SEED', keyHexChars: 32, wrongKey: 'a7'.repeat(16) },
 ];
 
-const CIPHER_OPTIONS = ['Camellia', 'ARIA', 'SM4', 'Kuznyechik'] as const;
+const CIPHER_OPTIONS = ['Camellia', 'ARIA', 'SM4', 'Kuznyechik', 'Kalyna', 'BelT', 'SEED'] as const;
 
 const text = async (page: Page, selector: string): Promise<string> =>
   ((await page.locator(selector).textContent()) ?? '').trim();
@@ -146,9 +170,9 @@ test('the live known-answer panel reproduces every official vector', async ({ pa
   await expect(page.locator('#kat-summary')).toHaveClass(/kat-pass/);
   await expect(page.locator('#kat-tbody .kat-fail')).toHaveCount(0);
 
-  // All four national ciphers are represented.
+  // All seven national ciphers are represented.
   const labels = rows.map((r) => r[1]);
-  for (const name of ['Camellia', 'ARIA', 'SM4', 'Kuznyechik']) {
+  for (const name of ['Camellia', 'ARIA', 'SM4', 'Kuznyechik', 'Kalyna', 'BelT', 'SEED']) {
     expect(labels.some((l) => l.startsWith(name)), `no KAT vector for ${name}`).toBe(true);
   }
 
@@ -157,6 +181,141 @@ test('the live known-answer panel reproduces every official vector', async ({ pa
   await expect(page.locator('#kat-tbody tr')).toHaveCount(rows.length);
   await expect(page.locator('#kat-tbody .kat-pass')).toHaveCount(rows.length);
   expect(await text(page, '#kat-summary')).toBe(summary);
+});
+
+/**
+ * One assertion per cipher added alongside the original four, each naming its own
+ * standard so a failure says WHICH cipher stopped reproducing WHICH document.
+ *
+ * What a PASS row proves: `runKnownAnswerTests()` renders "PASS" only when the
+ * value it just computed in the browser equals the vector in the app's table, and
+ * on a mismatch it appends "(got ...)" to the cell. So asserting PASS, plus the
+ * cell equalling the vector transcribed here from the standard, is the assertion
+ * that what the page recomputed on screen equals the official vector.
+ *
+ * Re-clicking `#kat-run` is what makes it a recomputation rather than a reading:
+ * the tbody is rebuilt from scratch on every run, so a row that survives a re-run
+ * was computed twice, not baked into the served HTML.
+ */
+const NEW_CIPHERS = [
+  { label: 'Kalyna-128/256', option: 'Kalyna', display: 'Kalyna-128/256' },
+  { label: 'BelT-256', option: 'BelT', display: 'BelT-256' },
+  { label: 'SEED-128', option: 'SEED', display: 'SEED' },
+] as const;
+
+for (const { label } of NEW_CIPHERS) {
+  test(`the KAT panel recomputes ${label}'s official vector on screen`, async ({ page }) => {
+    const official = OFFICIAL_VECTORS[label];
+    expect(official, `no pinned vector for ${label}`).toBeTruthy();
+
+    const row = page.locator('#kat-tbody tr').filter({ hasText: label });
+    await expect(row, `exactly one ${label} row`).toHaveCount(1);
+
+    const readRow = async (): Promise<string[]> =>
+      (await row.evaluate((tr) => Array.from(tr.children).map((td) => (td.textContent ?? '').trim())));
+
+    const [result, rowLabel, source, shown] = await readRow();
+    expect(rowLabel).toBe(label);
+    expect(result, `${label} must reproduce ${official.source}`).toBe('✓ PASS');
+    expect(source, `${label} cites its standard`).toBe(official.source);
+    // On a mismatch the page appends "(got <actual>)", so an exact equality here
+    // is simultaneously "the vector is the official one" and "nothing differed".
+    expect(shown, `${label} ciphertext on screen`).toBe(official.ciphertext);
+    expect(shown).not.toContain('(got ');
+    expect(shown).toMatch(/^[0-9a-f]{32}$/);
+    await expect(row.locator('.kat-pass')).toHaveCount(1);
+    await expect(row.locator('.kat-fail')).toHaveCount(0);
+
+    // Recompute: the tbody is rebuilt, and the same bytes must come back.
+    await page.locator('#kat-run').click();
+    await expect(page.locator('#kat-tbody tr')).toHaveCount(
+      Object.keys(OFFICIAL_VECTORS).length,
+    );
+    expect(await readRow(), `${label} after re-running the battery`).toEqual([
+      '✓ PASS',
+      label,
+      official.source,
+      official.ciphertext,
+    ]);
+  });
+}
+
+/**
+ * An INDEPENDENT re-derivation, not another reading of the KAT table.
+ *
+ * Kalyna's DSTU vector happens to use a plaintext (0x20..0x2f) that is entirely
+ * printable ASCII, so the standard's exact block can be typed into the Kalyna
+ * exhibit's own plaintext field. Encrypting it there goes through
+ * `ecbEncrypt()` and the interactive panel — a different code path from the KAT
+ * loop — and PKCS#7 puts the raw block encryption in the first 16 bytes. If the
+ * two paths ever disagree, one of them is wrong and this is what says so.
+ *
+ * This is only possible for Kalyna: BelT's and SEED's official plaintexts are
+ * arbitrary bytes that no text input can carry, so those two are covered by the
+ * row assertions above and by the unit suite's round-trip and variant tests.
+ */
+test("the Kalyna exhibit itself reproduces the DSTU vector, by a different path", async ({
+  page,
+}) => {
+  const official = OFFICIAL_VECTORS['Kalyna-128/256'];
+  // DSTU 7624:2014 Annex B, B.2.7 — key and plaintext, transcribed from the standard.
+  const key = '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f';
+  const plaintextBlock = ' !"#$%&\'()*+,-./'; // == 202122232425262728292a2b2c2d2e2f
+
+  // Sanity: the text really is the standard's block, byte for byte.
+  const asHex = Array.from(new TextEncoder().encode(plaintextBlock))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  expect(asHex).toBe('202122232425262728292a2b2c2d2e2f');
+
+  await page.locator('#kal-key').fill(key);
+  await page.locator('#kal-plaintext').fill(plaintextBlock);
+  await page.locator('#kal-encrypt').click();
+  await expect(page.locator('#kal-output .label')).toHaveText('Ciphertext (hex)');
+
+  const cipherHex = await outHex(page, 'kal');
+  // One full block of plaintext plus one full PKCS#7 pad block.
+  expect(cipherHex).toHaveLength(64);
+  expect(cipherHex.slice(0, 32), 'first ECB block is the raw block encryption').toBe(
+    official.ciphertext,
+  );
+
+  // ...and it still round-trips, so the panel is not just printing a constant.
+  // Read this one UNTRIMMED: the standard's block starts with 0x20, and the
+  // shared `text()` helper's .trim() would silently eat it — which would turn a
+  // real byte-for-byte check into an approximate one.
+  await page.locator('#kal-decrypt').click();
+  await expect(page.locator('#kal-output .plaintext-result')).toBeVisible();
+  const recovered = await page
+    .locator('#kal-output .plaintext-result')
+    .evaluate((el) => el.textContent ?? '');
+  expect(recovered).toBe(plaintextBlock);
+  expect(recovered.charCodeAt(0), 'the leading 0x20 survived the round trip').toBe(0x20);
+});
+
+/**
+ * Cross-check: the KAT row label, the three cipher selectors and the penguin's
+ * rendered note all name each new cipher the same way. These are four separate
+ * surfaces — one generated from the registry, three hand-authored in the HTML —
+ * and nothing else would notice them drifting apart.
+ */
+test('every new cipher is named identically across the panel and the selectors', async ({
+  page,
+}) => {
+  for (const { label, option, display } of NEW_CIPHERS) {
+    await expect(page.locator('#kat-tbody tr').filter({ hasText: label })).toHaveCount(1);
+
+    for (const select of ['#av-cipher', '#mode-cipher', '#penguin-cipher']) {
+      const text = await page.locator(`${select} option[value="${option}"]`).textContent();
+      expect(text, `${select} offers ${option}`).toBeTruthy();
+      // The option label is "<flag> <display name>".
+      expect((text ?? '').trim().split(' ').slice(1).join(' ')).toBe(display);
+    }
+
+    await page.locator('#penguin-cipher').selectOption(option);
+    await page.locator('#penguin-run').click();
+    await expect(page.locator('#penguin-note')).toContainText(display);
+  }
 });
 
 test('every cipher, key size and mode round-trips encrypt then decrypt', async ({ page }) => {
@@ -199,8 +358,8 @@ test('every cipher, key size and mode round-trips encrypt then decrypt', async (
     }
   }
 
-  // 11 configurations, no two of which produced the same ciphertext.
-  expect(ciphertexts.size).toBe(11);
+  // 14 configurations, no two of which produced the same ciphertext.
+  expect(ciphertexts.size).toBe(14);
   expect(new Set(ciphertexts.values()).size).toBe(ciphertexts.size);
 });
 

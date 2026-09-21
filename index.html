@@ -141,12 +141,12 @@
   <header class="cl-hero">
     <div class="cl-hero-main">
       <h1 class="cl-hero-title">World Ciphers</h1>
-      <p class="cl-hero-sub">Camellia · ARIA · SM4 · Kuznyechik · 128-bit block</p>
-      <p class="cl-hero-desc">Run four national AES-alternative block ciphers against their official test vectors and compare avalanche, ECB-vs-CBC leakage, key sizes, and S-box design side by side.</p>
+      <p class="cl-hero-sub">Seven national block ciphers · 128-bit block</p>
+      <p class="cl-hero-desc">Run seven national AES-alternative block ciphers against their official test vectors and compare avalanche, ECB-vs-CBC leakage, key sizes, and S-box design side by side.</p>
     </div>
     <aside class="cl-hero-why" aria-label="Why it matters">
       <span class="cl-hero-why-label">WHY IT MATTERS</span>
-      <p class="cl-hero-why-text">Nations standardize their own ciphers to avoid depending on a foreign algorithm they can't fully vet. Because all four share AES's 128-bit block, the same trust properties — avalanche, transparent S-boxes, safe modes — decide whether any of them is truly interchangeable.</p>
+      <p class="cl-hero-why-text">Nations standardize their own ciphers to avoid depending on a foreign algorithm they can't fully vet. Because all seven share AES's 128-bit block, the same trust properties — avalanche, transparent S-boxes, safe modes — decide whether any of them is truly interchangeable.</p>
     </aside>
   </header>
 
@@ -158,9 +158,12 @@
       <a href="#exhibit-2">🇰🇷 ARIA</a>
       <a href="#exhibit-3">🇨🇳 SM4</a>
       <a href="#exhibit-4">🇷🇺 Kuznyechik</a>
-      <a href="#exhibit-5">🌊 Avalanche</a>
-      <a href="#exhibit-6">🧩 ECB vs CBC</a>
-      <a href="#exhibit-7">📊 Comparison</a>
+      <a href="#exhibit-5">🇺🇦 Kalyna</a>
+      <a href="#exhibit-6">🇧🇾 BelT</a>
+      <a href="#exhibit-7">🇰🇷 SEED</a>
+      <a href="#exhibit-8">🌊 Avalanche</a>
+      <a href="#exhibit-9">🧩 ECB vs CBC</a>
+      <a href="#exhibit-10">📊 Comparison</a>
     </nav>
 
     <!-- ============================================================ -->
@@ -670,15 +673,266 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- EXHIBIT 5 — Avalanche Effect                                 -->
+    <!-- EXHIBIT 5 — Kalyna-128/256 (Ukraine)                         -->
     <!-- ============================================================ -->
     <section id="exhibit-5" class="exhibit">
-      <h2><span class="flag">🌊</span> Exhibit 5 — The Avalanche Effect</h2>
+      <h2><span class="flag">🇺🇦</span> Exhibit 5 — Kalyna-128/256</h2>
+      <div class="origin">
+        <strong>Ukraine</strong> · selected by national public cryptographic competition (2007–2010),
+        approved as the state standard in 2015<br>
+        DSTU 7624:2014 · <strong>not</strong> in ISO/IEC 18033-3 · no IETF cipher suite<br>
+        Replaces GOST 28147-89, the Soviet-era cipher Ukraine had inherited<br>
+        Structure: <a href="#term-spn" class="jargon">SPN</a> — Rijndael-like, but with a wider MDS
+        matrix, four different <a href="#term-sbox" class="jargon">S-boxes</a>, and pre/post-whitening
+        by <strong>addition modulo 2⁶⁴</strong> rather than XOR<br>
+        Block size: 128 / 256 / 512-bit · Key size: equal to or double the block.
+        Shown here: 128-bit block, 256-bit key, 14 <a href="#term-round" class="jargon">rounds</a>
+      </div>
+
+      <h3>Interactive Encrypt / Decrypt</h3>
+      <div class="playground">
+        <div class="control-row">
+          <label>Key size</label>
+          <span class="fixed-note">Fixed 256-bit — this is the 128/256 variant</span>
+        </div>
+        <div class="control-row">
+          <label for="kal-key">Key (hex)</label>
+          <input type="text" id="kal-key" placeholder="Auto-generated on load" />
+        </div>
+        <div class="control-row">
+          <label for="kal-plaintext">Plaintext</label>
+          <input type="text" id="kal-plaintext" value="Hello from Ukraine!" />
+        </div>
+        <div class="control-row">
+          <button id="kal-encrypt" type="button">Encrypt</button>
+          <button id="kal-decrypt" type="button">Decrypt</button>
+        </div>
+        <div class="output-area" id="kal-output" role="status" aria-live="polite">
+          <span class="label">Output will appear here</span>
+        </div>
+        <div class="rounds-wrap">
+          <span class="rounds-label">14-round SPN (128-bit block, 256-bit key):</span>
+          <div class="round-counter" id="kal-rounds"></div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>🔑 Key Size — Post-Quantum Consideration</strong>
+        <p>The variant shown here takes a <strong>256-bit key</strong>, so Grover's quadratic
+        speedup leaves roughly a <strong>128-bit post-quantum margin</strong> — the comfortable
+        case, the same as Camellia-256, ARIA-256 and Kuznyechik. Kalyna also defines 256- and
+        512-bit <em>block</em> sizes, which no other cipher in this demo offers; a wider block
+        pushes out the birthday bound on how much data one key may safely encrypt, which is a
+        different problem from key search and is not something a bigger key fixes.</p>
+      </div>
+
+      <div class="callout">
+        <strong>🌍 Geopolitical Context</strong>
+        <p>Until 2015 Ukraine's main block cipher was GOST 28147-89 — a Soviet standard it shared
+        with Russia. Kalyna was chosen to replace it through an open competition explicitly modelled
+        on AES and NESSIE, and the specification was published in English by its own authors.
+        Sovereign cryptography here is a move <em>away</em> from an inherited dependency rather
+        than toward a new one.</p>
+        <p>Practically, that openness is the asymmetry worth noticing: Kalyna's design rationale and
+        S-box construction are documented, but the cipher has attracted far less independent
+        cryptanalysis than AES, because far fewer people have had a reason to attack it.</p>
+      </div>
+
+      <div class="callout">
+        <strong>💡 Why this matters</strong>
+        <p>Kalyna is required for Ukrainian state information systems and for products certified
+        there. It is also the clearest example in this demo of a national standard adopted for a
+        stated political reason — replacing a cipher inherited from a neighbouring state — rather
+        than because the incumbent was known to be broken.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- EXHIBIT 6 — BelT-256 (Belarus)                               -->
+    <!-- ============================================================ -->
+    <section id="exhibit-6" class="exhibit">
+      <h2><span class="flag">🇧🇾</span> Exhibit 6 — BelT-256</h2>
+      <div class="origin">
+        <strong>Belarus</strong> · developed by the Research Institute for Applied Problems of
+        Mathematics and Informatics at Belarusian State University; introduced by the Operational
+        and Analytical Centre under the President of the Republic of Belarus<br>
+        STB 34.101.31-2020 (supersedes STB 34.101.31-2011) · <strong>not</strong> in
+        ISO/IEC 18033-3 · no IETF cipher suite<br>
+        Structure: 8 <a href="#term-round" class="jargon">rounds</a> over four 32-bit words, each
+        round applying G₅ / G₁₃ / G₂₁ — one 8-bit <a href="#term-sbox" class="jargon">S-box</a> H
+        applied bytewise, then a 32-bit rotation — mixed with addition modulo 2³² and XOR<br>
+        Block size: 128-bit · Key size: 128 / 192 / 256-bit, with shorter keys
+        <strong>expanded</strong> to the 256-bit key the block cipher itself takes
+      </div>
+
+      <h3>Interactive Encrypt / Decrypt</h3>
+      <div class="playground">
+        <div class="control-row">
+          <label>Key size</label>
+          <span class="fixed-note">Fixed 256-bit — the key belt-block takes directly</span>
+        </div>
+        <div class="control-row">
+          <label for="belt-key">Key (hex)</label>
+          <input type="text" id="belt-key" placeholder="Auto-generated on load" />
+        </div>
+        <div class="control-row">
+          <label for="belt-plaintext">Plaintext</label>
+          <input type="text" id="belt-plaintext" value="Hello from Belarus!" />
+        </div>
+        <div class="control-row">
+          <button id="belt-encrypt" type="button">Encrypt</button>
+          <button id="belt-decrypt" type="button">Decrypt</button>
+        </div>
+        <div class="output-area" id="belt-output" role="status" aria-live="polite">
+          <span class="label">Output will appear here</span>
+        </div>
+        <div class="rounds-wrap">
+          <span class="rounds-label">8 rounds, 7 round-key words each:</span>
+          <div class="round-counter" id="belt-rounds"></div>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <strong>⚠️ Key Size — Read the Expansion Carefully</strong>
+        <p>BelT's block cipher always consumes a <strong>256-bit</strong> key. A 128- or 192-bit
+        BelT key is not a smaller cipher — it is <em>expanded</em> into those 256 bits by a fixed,
+        public rule. Expansion adds length, not entropy: a 128-bit BelT key still has 128 bits of
+        entropy, so Grover leaves it the same ~<strong>64-bit</strong> headline margin that SM4 and
+        SEED have, despite the 256-bit key schedule.</p>
+        <p>The 256-bit key used here is the one the standard's own test vector uses and the only
+        one with a full 128-bit post-quantum margin. This is a good habit to carry elsewhere: when
+        a spec says a key is "expanded", check whether the expansion is keyed or merely
+        deterministic before crediting it with any security.</p>
+      </div>
+
+      <div class="callout">
+        <strong>🌍 Geopolitical Context</strong>
+        <p>STB 34.101.31 is mandatory for Belarusian state information systems and for certified
+        cryptographic protection sold there. The standard is introduced by the Operational and
+        Analytical Centre, the same presidential body that holds broad authority over Belarusian
+        internet infrastructure — so the agency that mandates the cipher and the agency that
+        regulates the network are one.</p>
+        <p>Unlike Kuznyechik, BelT carries <strong>no specific published concern</strong> about its
+        S-box or its design, and nothing here should be read as implying one. What it carries is
+        thin external scrutiny: the standard is published, but it has seen a small fraction of the
+        independent cryptanalysis that AES, Camellia or even SM4 have attracted. Absence of
+        published attacks on a cipher few people have attacked is weak evidence.</p>
+      </div>
+
+      <div class="callout">
+        <strong>💡 Why this matters</strong>
+        <p>BelT is the clearest illustration in this demo of the difference between
+        <em>unbroken</em> and <em>well-studied</em>. Both Camellia and BelT are unbroken; only one
+        of them has survived two decades of people being paid to try. If your threat model includes
+        a well-resourced adversary, that distinction is the whole decision.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- EXHIBIT 7 — SEED (South Korea)                               -->
+    <!-- ============================================================ -->
+    <section id="exhibit-7" class="exhibit">
+      <h2><span class="flag">🇰🇷</span> Exhibit 7 — SEED</h2>
+      <div class="origin">
+        <strong>South Korea</strong> · KISA (Korea Information Security Agency), developed from 1998<br>
+        TTAS.KO-12.0004 · ISO/IEC 18033-3 · IETF RFC 4269 (Informational, the algorithm) and
+        <strong>RFC 4162 (Standards Track, the TLS cipher suites)</strong><br>
+        Structure: 16-<a href="#term-round" class="jargon">round</a>
+        <a href="#term-feistel" class="jargon">Feistel network</a>, two 8×8
+        <a href="#term-sbox" class="jargon">S-boxes</a>, mixing XOR with modular addition<br>
+        Block size: 128-bit · Key size: <strong>128-bit only</strong><br>
+        Korea's <em>older</em> national cipher — ARIA (Exhibit 2) came five years later and did not
+        replace it
+      </div>
+
+      <h3>Interactive Encrypt / Decrypt</h3>
+      <p class="note-secondary">
+        This is the one panel here driven in <strong>CBC</strong> rather than ECB, because CBC is
+        what KISA's reference distribution exposes — and CBC is what Korean deployments actually
+        ran. The IV gets its own field, exactly as in Camellia's CBC row. The known-answer test in
+        the panel above still checks SEED's <em>raw block</em>, by a separate route.
+      </p>
+      <div class="playground">
+        <div class="control-row">
+          <label>Key size</label>
+          <span class="fixed-note">Fixed 128-bit — SEED has only one key size</span>
+        </div>
+        <div class="control-row">
+          <label for="seed-key">Key (hex)</label>
+          <input type="text" id="seed-key" placeholder="Auto-generated on load" />
+        </div>
+        <div class="control-row">
+          <label for="seed-iv">IV (hex)</label>
+          <input type="text" id="seed-iv" placeholder="Auto-generated on load" />
+        </div>
+        <div class="control-row">
+          <label for="seed-plaintext">Plaintext</label>
+          <input type="text" id="seed-plaintext" value="Hello from Korea!" />
+        </div>
+        <div class="control-row">
+          <button id="seed-encrypt" type="button">Encrypt</button>
+          <button id="seed-decrypt" type="button">Decrypt</button>
+        </div>
+        <div class="output-area" id="seed-output" role="status" aria-live="polite">
+          <span class="label">Output will appear here</span>
+        </div>
+        <div class="rounds-wrap">
+          <span class="rounds-label">16-round Feistel structure:</span>
+          <div class="round-counter" id="seed-rounds"></div>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <strong>⚠️ Key Size Warning — Post-Quantum Consideration</strong>
+        <p>SEED has a fixed 128-bit key with no larger variant, so it sits exactly where SM4 does:
+        Grover's quadratic speedup puts the <em>headline</em> figure at
+        ~<strong>64-bit post-quantum security</strong>, versus the 128-bit margin a 256-bit key
+        gives you.</p>
+        <p><strong>The same honest nuance applies:</strong> Grover's search parallelizes poorly, so
+        under NIST's MAXDEPTH model the practical cost is far above 2⁶⁴, and NIST still uses
+        AES-128 as its post-quantum "Level 1" baseline. The real post-quantum emergency is in
+        <em>asymmetric</em> crypto.</p>
+        <p><strong>Bottom line:</strong> like SM4, SEED gives you no room to grow. Korea's own
+        answer to that was ARIA, which offers 192- and 256-bit keys — which is a large part of why
+        ARIA exists at all.</p>
+      </div>
+
+      <div class="callout danger">
+        <strong>🔴 The Ecosystem Lesson — SEED and ActiveX</strong>
+        <p>SEED is a competent cipher that did real damage, and not through its cryptography.
+        Korea mandated it for online banking and e-commerce from the late 1990s, but no mainstream
+        browser implemented it. RFC 4162 added SEED cipher suites to TLS in <strong>2005</strong> —
+        seven years after the cipher — and browsers largely never shipped them.</p>
+        <p>So Korean sites delivered SEED through a <strong>Microsoft ActiveX plug-in</strong>
+        instead. ActiveX ran only on Internet Explorer on Windows, which pinned the entire Korean
+        consumer web to one browser on one operating system for well over a decade, normalised
+        "install this binary to use your bank", and left users worse off than plain TLS would
+        have. Unwinding it became explicit government policy from 2015 onward.</p>
+        <p><strong>The lesson is not "don't build a national cipher."</strong> It is that a cipher
+        with no path into the protocols people actually use will be carried by whatever
+        hack is available — and that hack, not the cipher, becomes your real attack surface.
+        Compare Camellia and ARIA, which both got TLS cipher suites and shipped normally.</p>
+      </div>
+
+      <div class="callout">
+        <strong>💡 Why this matters</strong>
+        <p>SEED is still permitted in Korean systems and still appears in legacy financial software,
+        so engineers working on Korean integrations meet it. Treat it the way you would any
+        128-bit-key, no-AEAD-mode legacy cipher: fine to interoperate with, not what you would
+        choose for new data at rest.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- EXHIBIT 8 — Avalanche Effect                                 -->
+    <!-- ============================================================ -->
+    <section id="exhibit-8" class="exhibit">
+      <h2><span class="flag">🌊</span> Exhibit 8 — The Avalanche Effect</h2>
       <p class="origin">
         A core requirement of any strong block cipher: flipping a <strong>single bit</strong> of
         input should change about <strong>half</strong> of the output bits, unpredictably. This is
         the avalanche effect (strict avalanche criterion). It's why ciphertext looks like noise and
-        why you can't chip away at a block cipher one bit at a time. All four ciphers here exhibit it.
+        why you can't chip away at a block cipher one bit at a time. All seven ciphers here exhibit it.
       </p>
 
       <h3>Flip One Bit, Watch Half the Ciphertext Change</h3>
@@ -690,7 +944,10 @@
             <option value="ARIA">🇰🇷 ARIA-256</option>
             <option value="SM4">🇨🇳 SM4</option>
             <option value="Kuznyechik">🇷🇺 Kuznyechik</option>
-          </select>
+                    <option value="Kalyna">🇺🇦 Kalyna-128/256</option>
+          <option value="BelT">🇧🇾 BelT-256</option>
+          <option value="SEED">🇰🇷 SEED</option>
+</select>
           <label for="av-flip">Flip plaintext bit</label>
           <select id="av-flip"></select>
           <button id="av-run" type="button">Run</button>
@@ -712,10 +969,10 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- EXHIBIT 6 — ECB vs CBC                                       -->
+    <!-- EXHIBIT 9 — ECB vs CBC                                       -->
     <!-- ============================================================ -->
-    <section id="exhibit-6" class="exhibit">
-      <h2><span class="flag">🧩</span> Exhibit 6 — Why Mode Matters: ECB vs CBC</h2>
+    <section id="exhibit-9" class="exhibit">
+      <h2><span class="flag">🧩</span> Exhibit 9 — Why Mode Matters: ECB vs CBC</h2>
       <p class="origin">
         A strong cipher is not enough — how you chain blocks together matters just as much.
         <strong>ECB</strong> (Electronic Codebook) encrypts every 16-byte block independently, so
@@ -736,7 +993,10 @@
             <option value="ARIA">🇰🇷 ARIA-256</option>
             <option value="SM4">🇨🇳 SM4</option>
             <option value="Kuznyechik">🇷🇺 Kuznyechik</option>
-          </select>
+                    <option value="Kalyna">🇺🇦 Kalyna-128/256</option>
+          <option value="BelT">🇧🇾 BelT-256</option>
+          <option value="SEED">🇰🇷 SEED</option>
+</select>
           <button id="mode-run" type="button">Encrypt repeated block</button>
         </div>
       </div>
@@ -767,7 +1027,10 @@
           <option value="ARIA">🇰🇷 ARIA-256</option>
           <option value="SM4">🇨🇳 SM4</option>
           <option value="Kuznyechik">🇷🇺 Kuznyechik</option>
-        </select>
+                  <option value="Kalyna">🇺🇦 Kalyna-128/256</option>
+          <option value="BelT">🇧🇾 BelT-256</option>
+          <option value="SEED">🇰🇷 SEED</option>
+</select>
         <button id="penguin-run" type="button">Encrypt the image</button>
       </div>
       <div class="penguin-row">
@@ -799,18 +1062,18 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- EXHIBIT 7 — Four-Way Comparison                              -->
+    <!-- EXHIBIT 10 — Seven-Way Comparison                            -->
     <!-- ============================================================ -->
-    <section id="exhibit-7" class="exhibit">
-      <h2><span class="flag">📊</span> Exhibit 7 — Four-Way Comparison</h2>
+    <section id="exhibit-10" class="exhibit">
+      <h2><span class="flag">📊</span> Exhibit 10 — Seven-Way Comparison</h2>
 
       <h3>Comparison Table</h3>
       <!-- Same WCAG 2.1.1 fix as the KAT table above; this one is min-width:700px
            and holds no focusable content at all. -->
       <div class="comparison-table-wrapper" role="region" tabindex="0"
-           aria-label="Four-way cipher comparison, scrollable">
+           aria-label="Seven-way cipher comparison, scrollable">
         <table class="comparison-table">
-          <caption class="sr-only">Side-by-side comparison of Camellia-256, ARIA-256, SM4, and Kuznyechik properties</caption>
+          <caption class="sr-only">Side-by-side comparison of Camellia-256, ARIA-256, SM4, Kuznyechik, Kalyna-128/256, BelT-256, and SEED properties</caption>
           <thead>
             <tr>
               <th scope="col">Property</th>
@@ -818,22 +1081,25 @@
               <th scope="col">ARIA-256</th>
               <th scope="col">SM4</th>
               <th scope="col">Kuznyechik</th>
+              <th scope="col">Kalyna-128/256</th>
+              <th scope="col">BelT-256</th>
+              <th scope="col">SEED</th>
             </tr>
           </thead>
           <tbody>
-            <tr><th scope="row">Country</th><td>Japan</td><td>South Korea</td><td>China</td><td>Russia</td></tr>
-            <tr><th scope="row">Designer</th><td>NTT / Mitsubishi</td><td>NSRI Korea</td><td>OSCCA</td><td>FSB Russia</td></tr>
-            <tr><th scope="row">Year</th><td>2000</td><td>2003</td><td>2006</td><td>2015</td></tr>
-            <tr><th scope="row">Block size</th><td>128-bit</td><td>128-bit</td><td>128-bit</td><td>128-bit</td></tr>
-            <tr><th scope="row">Key sizes</th><td>128 / 192 / 256</td><td>128 / 192 / 256</td><td>128 only</td><td>256 only</td></tr>
-            <tr><th scope="row">Structure</th><td>Feistel + SPN</td><td>SPN</td><td>Feistel</td><td>SPN</td></tr>
-            <tr><th scope="row">ISO/IEC 18033-3</th><td class="check">✓</td><td class="cross">✗</td><td class="check">✓ Amd 1:2021</td><td class="cross">✗ withdrawn</td></tr>
-            <tr><th scope="row">TLS cipher suite (RFC)</th><td class="check">✓ 5932</td><td class="check">✓ 6209</td><td class="check">✓ 8998 (TLS 1.3)</td><td class="partial">✓ 9189 (TLS 1.2)</td></tr>
-            <tr><th scope="row">IETF status</th><td class="check">Standards Track</td><td class="partial">Informational</td><td class="partial">Informational</td><td class="cross">Informational (not endorsed)</td></tr>
-            <tr><th scope="row">Design transparency</th><td class="check">✓ Full</td><td class="check">✓ Full</td><td class="partial">Partial</td><td class="cross">✗ S-box opaque</td></tr>
-            <tr><th scope="row">PQ security (128-bit key)</th><td class="check">✓</td><td class="check">✓</td><td class="cross">✗ (64-bit PQ)</td><td class="check">✓</td></tr>
-            <tr><th scope="row">Use when</th><td>AES alternative</td><td>Korean compliance</td><td>China compliance</td><td>Russian compliance</td></tr>
-            <tr><th scope="row">Trust level</th><td class="check">High</td><td class="check">High</td><td class="partial">Medium</td><td class="cross">Use with caution</td></tr>
+            <tr><th scope="row">Country</th><td>Japan</td><td>South Korea</td><td>China</td><td>Russia</td><td>Ukraine</td><td>Belarus</td><td>South Korea</td></tr>
+            <tr><th scope="row">Designer</th><td>NTT / Mitsubishi</td><td>NSRI Korea</td><td>OSCCA</td><td>FSB Russia</td><td>National competition / SSSCIP</td><td>BSU research institute / OAC</td><td>KISA</td></tr>
+            <tr><th scope="row">Year</th><td>2000</td><td>2003</td><td>2006</td><td>2015</td><td>2015</td><td>2011</td><td>1998</td></tr>
+            <tr><th scope="row">Block size</th><td>128-bit</td><td>128-bit</td><td>128-bit</td><td>128-bit</td><td>128-bit (also 256, 512)</td><td>128-bit</td><td>128-bit</td></tr>
+            <tr><th scope="row">Key sizes</th><td>128 / 192 / 256</td><td>128 / 192 / 256</td><td>128 only</td><td>256 only</td><td>128 / 256 / 512 (= or 2x block)</td><td>128 / 192 / 256 (expanded to 256)</td><td>128 only</td></tr>
+            <tr><th scope="row">Structure</th><td>Feistel + SPN</td><td>SPN</td><td>Feistel</td><td>SPN</td><td>SPN</td><td>ARX + S-box, 8 rounds</td><td>Feistel</td></tr>
+            <tr><th scope="row">ISO/IEC 18033-3</th><td class="check">✓</td><td class="cross">✗</td><td class="check">✓ Amd 1:2021</td><td class="cross">✗ withdrawn</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td></tr>
+            <tr><th scope="row">TLS cipher suite (RFC)</th><td class="check">✓ 5932</td><td class="check">✓ 6209</td><td class="check">✓ 8998 (TLS 1.3)</td><td class="partial">✓ 9189 (TLS 1.2)</td><td class="cross">✗ none</td><td class="cross">✗ none</td><td class="check">✓ 4162</td></tr>
+            <tr><th scope="row">IETF status</th><td class="check">Standards Track</td><td class="partial">Informational</td><td class="partial">Informational</td><td class="cross">Informational (not endorsed)</td><td class="cross">No RFC</td><td class="cross">No RFC</td><td class="check">Standards Track (TLS)</td></tr>
+            <tr><th scope="row">Design transparency</th><td class="check">✓ Full</td><td class="check">✓ Full</td><td class="partial">Partial</td><td class="cross">✗ S-box opaque</td><td class="check">✓ Full</td><td class="check">✓ Published</td><td class="check">✓ Full</td></tr>
+            <tr><th scope="row">PQ security (128-bit key)</th><td class="check">✓</td><td class="check">✓</td><td class="cross">✗ (64-bit PQ)</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓ (at 256-bit key)</td><td class="cross">✗ (64-bit PQ)</td></tr>
+            <tr><th scope="row">Use when</th><td>AES alternative</td><td>Korean compliance</td><td>China compliance</td><td>Russian compliance</td><td>Ukrainian compliance</td><td>Belarusian compliance</td><td>Korean legacy interop</td></tr>
+            <tr><th scope="row">Trust level</th><td class="check">High</td><td class="check">High</td><td class="partial">Medium</td><td class="cross">Use with caution</td><td class="partial">High design, thin review</td><td class="partial">Thin external review</td><td class="partial">Sound but dated</td></tr>
           </tbody>
         </table>
       </div>
@@ -861,6 +1127,21 @@
           <span class="pick pick-danger">Kuznyechik <span class="pick-subnote">(S-box caveat noted)</span></span>
         </div>
         <div class="decision">
+          <span class="need">"I need Ukrainian state-system compliance"</span>
+          <span class="arrow-right">→</span>
+          <span class="pick pick-success">Kalyna</span>
+        </div>
+        <div class="decision">
+          <span class="need">"I need Belarusian state-system compliance"</span>
+          <span class="arrow-right">→</span>
+          <span class="pick pick-warning">BelT <span class="pick-subnote">(thin external review)</span></span>
+        </div>
+        <div class="decision">
+          <span class="need">"I have to interoperate with Korean legacy financial software"</span>
+          <span class="arrow-right">→</span>
+          <span class="pick pick-warning">SEED <span class="pick-subnote">(128-bit key only)</span></span>
+        </div>
+        <div class="decision">
           <span class="need">"None of the above"</span>
           <span class="arrow-right">→</span>
           <span class="pick pick-accent">AES-256-GCM</span>
@@ -869,8 +1150,9 @@
 
       <div class="callout">
         <strong>🔗 Cross-Demo Reference</strong>
-        <p>All four of these ciphers appear in crypto-compare. This demo covers the practical
-        encrypt/decrypt behavior. For deeper algorithm reference including security estimates, see:
+        <p>Camellia, ARIA, SM4 and Kuznyechik also appear in crypto-compare. This demo covers the
+        practical encrypt/decrypt behavior. For deeper algorithm reference including security
+        estimates, see:
         <a href="https://systemslibrarian.github.io/crypto-compare/" class="cross-link">
           systemslibrarian.github.io/crypto-compare/</a></p>
       </div>

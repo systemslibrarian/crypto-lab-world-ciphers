@@ -15,7 +15,7 @@ import type { Page } from '@playwright/test';
  *    paints `.cipher-block.repeat`, the tinted row marking ECB's leaked duplicate
  *    blocks; `--accent-dim`, which is both the unlit `.bit-cell` of the avalanche
  *    grid and the hover surface of every section-nav link; and `--table-stripe`
- *    under every even row of the four-way comparison table. On top of those the
+ *    under every even row of the seven-way comparison table. On top of those the
  *    hero aside is a `color-mix(in oklab, var(--accent) 6%, transparent)` and the
  *    shared top bar's `--cl-ink` is a `color-mix(in srgb, ...)`. axe files all of
  *    them under `incomplete`, so a violations-only gate measured the contrast of
@@ -427,7 +427,7 @@ export async function auditContrast(page: Page, within = 'body *'): Promise<Cont
      * Style and geometry are memoised per element for one pass.
      *
      * A driven pass here walks nine sections, seven live KAT rows, a thirteen-row
-     * four-way comparison table and — the expensive part — the ARIA S-box grid,
+     * seven-way comparison table and — the expensive part — the ARIA S-box grid,
      * which is 256 `<td>`s plus 33 headers all re-walking the same ancestors up
      * to `<body>`, beside the avalanche exhibit's 128 `.bit-cell` spans and 24 or
      * 32 `.round-dot`s per tally. Without the caches the pass re-reads the same

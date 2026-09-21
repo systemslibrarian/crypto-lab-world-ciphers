@@ -13,8 +13,9 @@ import {
  *
  * The lab is driven along everything it teaches: the arrival state, where the
  * KAT battery, the avalanche demo, the ECB/CBC block comparison and the ECB
- * penguin have all already run themselves and four key fields are filled with
- * fresh random hex; both skip links focused; the KAT battery re-run; Camellia
+ * penguin have all already run themselves and seven key fields plus two IV
+ * fields are filled with fresh random hex; both skip links focused; the KAT
+ * battery re-run; Camellia
  * encrypted and round-tripped in CBC, then in ECB — the only branch that
  * withdraws the IV row — then at 128 bits for the eighteen-round tally, then with
  * a rejected key for the error ink, then compared against AES; ARIA encrypted and
@@ -23,11 +24,13 @@ import {
  * involutory diffusion layer verified live and then rejected; SM4 encrypted —
  * which under reduced motion renders round 32 of 32 rather than stepping through
  * them — round-tripped, replayed and rejected; Kuznyechik encrypted,
- * round-tripped and rejected; the avalanche exhibit on all four ciphers, at the
- * final plaintext bit, and re-keyed; ECB-versus-CBC on three ciphers and the
- * penguin image on two; and the hover state of a nav link, a copy control and a
- * primary button. Every one of those states is scanned, in both themes, at
- * desktop and phone width.
+ * round-tripped and rejected; Kalyna and BelT each encrypted, round-tripped and
+ * rejected; SEED encrypted in CBC, round-tripped, and its IV — the only second
+ * IV field on the page — rejected on its own branch; the avalanche exhibit on
+ * all seven ciphers, at the final plaintext bit, and re-keyed; ECB-versus-CBC on
+ * three ciphers and the penguin image on two; and the hover state of a nav link,
+ * a copy control and a primary button. Every one of those states is scanned, in
+ * both themes, at desktop and phone width.
  *
  * Clipboard permission is granted because `outputWithCopy()` calls
  * `navigator.clipboard.writeText` from an `async` listener with no `.catch()`:

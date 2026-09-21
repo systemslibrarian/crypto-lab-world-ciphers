@@ -1,14 +1,18 @@
 # crypto-lab-world-ciphers
 
 ## What It Is
-World Ciphers demonstrates four national symmetric block ciphers: Camellia-256 (Japan, NTT/Mitsubishi, 2000), ARIA-256 (South Korea, NSRI, 2003), SM4 (China, OSCCA, 2006), and Kuznyechik (Russia, FSB, 2015). All four share AES's 128-bit block size, but each was designed independently as a sovereign cryptographic standard for government and regulatory use. Only Camellia and SM4 are in ISO/IEC 18033-3 (SM4 via Amendment 1:2021); ARIA is standardized in KS X 1213 and RFC 5794 but not in 18033-3, and the amendment that would have added Kuznyechik was withdrawn over its S-box design concerns. The security model is symmetric block cipher: the same key encrypts and decrypts, with security grounded in the computational hardness of inverting the cipher without the key.
+World Ciphers demonstrates seven national symmetric block ciphers: Camellia-256 (Japan, NTT/Mitsubishi, 2000), ARIA-256 (South Korea, NSRI, 2003), SM4 (China, OSCCA, 2006), Kuznyechik (Russia, FSB, 2015), Kalyna-128/256 (Ukraine, DSTU 7624:2014), BelT-256 (Belarus, STB 34.101.31) and SEED (South Korea, KISA, 1998). All seven share AES's 128-bit block size, but each was designed independently as a sovereign cryptographic standard for government and regulatory use. Camellia, SM4 and SEED are in ISO/IEC 18033-3 (SM4 via Amendment 1:2021); ARIA is standardized in KS X 1213 and RFC 5794 but not in 18033-3, the amendment that would have added Kuznyechik was withdrawn over its S-box design concerns, and neither Kalyna nor BelT is in 18033-3 or has an IETF cipher suite. The security model is symmetric block cipher: the same key encrypts and decrypts, with security grounded in the computational hardness of inverting the cipher without the key.
 
 ## When to Use It
 - Camellia-256: AES-equivalent alternative with full design transparency, TLS support, and CRYPTREC endorsement — the strongest general-purpose pick from this group.
 - ARIA-256: Required for Korean government and financial system compliance.
 - SM4: Required for products operating in Chinese markets under Chinese law.
 - Kuznyechik: Required for Russian GOST R 34.12-2015 compliance only.
-- Do not use SM4 alone for long-term data — its 128-bit key gives roughly 64-bit post-quantum security, below NIST's recommended 128-bit post-quantum threshold.
+- Kalyna-128/256: Required for Ukrainian state information systems; the one cipher here that also defines 256- and 512-bit block sizes.
+- BelT-256: Required for Belarusian state information systems.
+- SEED: Interoperating with Korean legacy financial and e-commerce software; ARIA is the newer Korean standard and the one to reach for otherwise.
+- Do not use SM4 or SEED alone for long-term data — a fixed 128-bit key gives roughly 64-bit post-quantum security, below NIST's recommended 128-bit post-quantum threshold.
+- Do not credit a BelT-128 or BelT-192 key with 256-bit strength: BelT's block cipher always takes 256 bits, and a shorter key is expanded into them by a fixed public rule that adds length, not entropy.
 - Do not use Kuznyechik outside of Russian compliance requirements — S-box design transparency concerns are unresolved.
 - None of these replace AES-256-GCM as a general-purpose default.
 - Do NOT treat this as a production crypto library — it is a teaching demo that implements these ciphers to compare them, not a hardened deployment.
@@ -17,7 +21,7 @@ World Ciphers demonstrates four national symmetric block ciphers: Camellia-256 (
 
 **[systemslibrarian.github.io/crypto-lab-world-ciphers](https://systemslibrarian.github.io/crypto-lab-world-ciphers/)**
 
-All cipher outputs are real operations — no simulation. To prove it, the page opens with a **live known-answer test (KAT)** that encrypts each cipher's official vector (RFC 3713, RFC 5794, GB/T 32907-2016, GOST R 34.12-2015) in your browser and checks it byte-for-byte against the published ciphertext. The same vectors gate `npm test`.
+All cipher outputs are real operations — no simulation. To prove it, the page opens with a **live known-answer test (KAT)** that encrypts each cipher's official vector in your browser and checks it byte-for-byte against the published ciphertext: RFC 3713 §A (Camellia), RFC 5794 (ARIA), GB/T 32907-2016 §A.1 (SM4), GOST R 34.12-2015 / RFC 7801 (Kuznyechik), DSTU 7624:2014 Annex B §B.2.7 (Kalyna), STB 34.101.31-2020 Annex A §A.1 (BelT) and RFC 4269 Appendix B.1 (SEED). Ten vectors in all. The same vectors gate `npm test`, and `e2e/claims.spec.ts` re-asserts each one against the standard independently of the app's own table.
 
 The demo now opens with a **Start Here** vocabulary panel that defines block, key, round, S-box, SPN, Feistel, involution, and diffusion layer in one plain sentence each, and every jargon term in the exhibits links back to it. Exhibits are:
 
@@ -26,13 +30,18 @@ The demo now opens with a **Start Here** vocabulary panel that defines block, ke
 3. **ARIA-256** — shows where ARIA's involution actually lives (the diffusion layer, not the S-boxes), with involution defined plainly up front and an **animated 16×16 S-box lookup** that traces S₁, then S₁ again (landing elsewhere — the proof it is not an involution), then S₁⁻¹ back to the input.
 4. **SM4** — the honest post-quantum key-size warning and geopolitical context, plus a **round animation** that runs the genuine 32-round Feistel/T-transform pipeline (substitute → mix → add-round-key) over the live state you just encrypted, so the round count is shown, not merely asserted. The animation is driven by a spec-accurate tracer whose final output is checked against the GB/T 32907-2016 vector in `npm test`.
 5. **Kuznyechik** — the S-box transparency controversy documented (Biryukov, Perrin & Udovenko, EUROCRYPT 2016; Perrin, IACR ToSC 2019).
-6. **Avalanche Effect** — flip one input bit, watch about 50% of ciphertext bits change.
-7. **ECB vs CBC** — the raw-block hex view *and* the actual **"ECB penguin" image demonstration**: a small picture is encrypted with a real block cipher, and the ECB ghost survives while CBC turns it to noise.
-8. **Four-Way Comparison** — a comparison table with a decision tree.
+6. **Kalyna-128/256** — Ukraine's replacement for the Soviet-era GOST 28147-89 it shared with Russia, chosen by an open competition modelled on AES and NESSIE; the only cipher here that whitens with addition modulo 2⁶⁴ rather than XOR, and the only one offering wider blocks.
+7. **BelT-256** — Belarus's state standard, and the demo's clearest case of the difference between *unbroken* and *well-studied*: no published concern about its design, and very little independent cryptanalysis either. Also the place the key-expansion trap is shown — 256-bit key schedule, 128 bits of entropy.
+8. **SEED** — Korea's older cipher, driven in CBC because that is the mode KISA's own distribution exposes, plus the ecosystem lesson: a cipher no browser implemented was carried by a Microsoft ActiveX plug-in that pinned the Korean consumer web to one browser for over a decade.
+9. **Avalanche Effect** — flip one input bit, watch about 50% of ciphertext bits change.
+10. **ECB vs CBC** — the raw-block hex view *and* the actual **"ECB penguin" image demonstration**: a small picture is encrypted with a real block cipher, and the ECB ghost survives while CBC turns it to noise.
+11. **Seven-Way Comparison** — a comparison table with a decision tree.
 
 ## What Can Go Wrong
 - ECB mode leaks structure: identical plaintext blocks produce identical ciphertext blocks (the "ECB penguin"), so a confidential mode like CBC or an AEAD mode is required.
-- SM4's 128-bit key gives only about 64-bit security against Grover-style quantum search, below NIST's 128-bit post-quantum threshold for long-term data.
+- SM4's and SEED's fixed 128-bit keys give only about 64-bit security against Grover-style quantum search, below NIST's 128-bit post-quantum threshold for long-term data.
+- A cipher with no route into the protocols people actually use gets carried by whatever workaround is available, and the workaround becomes the attack surface. SEED is the worked example: mandated for Korean e-commerce, absent from browsers, delivered by ActiveX for over a decade.
+- "No published attacks" is weak evidence when few people have had a reason to attack. BelT and Kalyna are both unbroken and both far less studied than AES or Camellia.
 - Kuznyechik's S-box design transparency concerns (Biryukov, Perrin & Udovenko 2016; Perrin 2019) remain unresolved, which is why it is best confined to mandated compliance use.
 - Reaching for a national cipher outside its compliance mandate trades AES's scrutiny and tooling for weaker ecosystem support with no security gain.
 - A raw block cipher provides no integrity; without an authenticated mode, ciphertext can be tampered with undetected, and IV/nonce reuse in CBC further degrades confidentiality.
@@ -42,7 +51,10 @@ The demo now opens with a **Start Here** vocabulary panel that defines block, ke
 - ARIA-256 is mandated for South Korean government and financial-sector systems.
 - SM4 is required for products in Chinese markets and is used in Chinese TLS (TLCP) and PKI under Chinese cryptography law.
 - Kuznyechik is required for Russian GOST R 34.12-2015 compliance.
-- Camellia and SM4 are standardized under ISO/IEC 18033-3 (SM4 by Amendment 1:2021); ARIA and Kuznyechik are not, though all four serve as sovereign national standards at home.
+- Kalyna is required for Ukrainian state information systems; it replaced GOST 28147-89, the Soviet-era cipher Ukraine had inherited, after an open national competition run 2007–2010.
+- BelT is required for Belarusian state information systems and certified cryptographic products, under STB 34.101.31-2020.
+- SEED is still permitted in Korean systems and persists in legacy financial software; RFC 4162 added its TLS cipher suites in 2005, seven years after the cipher.
+- Camellia, SM4 and SEED are standardized under ISO/IEC 18033-3 (SM4 by Amendment 1:2021); ARIA, Kuznyechik, Kalyna and BelT are not, though all seven serve as sovereign national standards at home.
 
 ## How to Run Locally
 

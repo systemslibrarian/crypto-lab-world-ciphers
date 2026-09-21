@@ -1,6 +1,9 @@
 import { cbc as aesCbc } from '@noble/ciphers/aes.js';
 import { SM4 } from 'gm-crypto';
 import { Kuznyechik } from '@li0ard/kuznyechik';
+import { Kalyna128_256 } from '@li0ard/kalyna';
+import { Belt } from '@li0ard/belt';
+import { KISA_SEED_CBC } from 'kisa-seed';
 import { Aria, ARIA_IS1, ARIA_SB1, ariaDiffusion } from './ciphers/aria';
 import { Camellia } from './ciphers/camellia';
 import { sm4Trace, type SM4RoundStep } from './ciphers/sm4-trace';
@@ -561,6 +564,135 @@ $('kuz-decrypt').addEventListener('click', () => {
     outputWithCopy(kuzOutput, 'Recovered plaintext', bytesToUtf8(plain), 'plaintext-result');
   } catch (error) {
     outputError(kuzOutput, (error as Error).message);
+  }
+});
+
+// Exhibit 5: Kalyna-128/256
+const kalKey = $('kal-key') as HTMLInputElement;
+const kalPlaintext = $('kal-plaintext') as HTMLInputElement;
+const kalOutput = $('kal-output');
+const kalRounds = $('kal-rounds');
+let kalLastCipherHex = '';
+
+if (!kalKey.value.trim() || kalKey.value.trim().length !== 64) {
+  kalKey.value = randomHex(32);
+}
+// DSTU 7624:2014 Table 1: a 128-bit block under a 256-bit key runs 14 rounds.
+fillRoundDots(kalRounds, 14);
+
+$('kal-encrypt').addEventListener('click', () => {
+  try {
+    const key = parseKeyHex(kalKey.value, 32, 'Kalyna key');
+    const kal = new Kalyna128_256(key);
+    const cipher = ecbEncrypt(kal.encrypt.bind(kal), utf8ToBytes(kalPlaintext.value));
+    kalLastCipherHex = bytesToHex(cipher);
+    outputWithCopy(kalOutput, 'Ciphertext (hex)', kalLastCipherHex);
+  } catch (error) {
+    outputError(kalOutput, (error as Error).message);
+  }
+});
+
+$('kal-decrypt').addEventListener('click', () => {
+  try {
+    if (!kalLastCipherHex) throw new Error('Encrypt first to produce ciphertext');
+    const key = parseKeyHex(kalKey.value, 32, 'Kalyna key');
+    const kal = new Kalyna128_256(key);
+    const plain = ecbDecrypt(kal.decrypt.bind(kal), hexToBytes(kalLastCipherHex));
+    outputWithCopy(kalOutput, 'Recovered plaintext', bytesToUtf8(plain), 'plaintext-result');
+  } catch (error) {
+    outputError(kalOutput, (error as Error).message);
+  }
+});
+
+// Exhibit 6: BelT-256
+const beltKey = $('belt-key') as HTMLInputElement;
+const beltPlaintext = $('belt-plaintext') as HTMLInputElement;
+const beltOutput = $('belt-output');
+const beltRounds = $('belt-rounds');
+let beltLastCipherHex = '';
+
+if (!beltKey.value.trim() || beltKey.value.trim().length !== 64) {
+  beltKey.value = randomHex(32);
+}
+// STB 34.101.31 6.1.3: belt-block runs i = 1..8, seven round-key words per round.
+fillRoundDots(beltRounds, 8);
+
+$('belt-encrypt').addEventListener('click', () => {
+  try {
+    const key = parseKeyHex(beltKey.value, 32, 'BelT key');
+    const belt = new Belt(key);
+    const cipher = ecbEncrypt(belt.encrypt.bind(belt), utf8ToBytes(beltPlaintext.value));
+    beltLastCipherHex = bytesToHex(cipher);
+    outputWithCopy(beltOutput, 'Ciphertext (hex)', beltLastCipherHex);
+  } catch (error) {
+    outputError(beltOutput, (error as Error).message);
+  }
+});
+
+$('belt-decrypt').addEventListener('click', () => {
+  try {
+    if (!beltLastCipherHex) throw new Error('Encrypt first to produce ciphertext');
+    const key = parseKeyHex(beltKey.value, 32, 'BelT key');
+    const belt = new Belt(key);
+    const plain = ecbDecrypt(belt.decrypt.bind(belt), hexToBytes(beltLastCipherHex));
+    outputWithCopy(beltOutput, 'Recovered plaintext', bytesToUtf8(plain), 'plaintext-result');
+  } catch (error) {
+    outputError(beltOutput, (error as Error).message);
+  }
+});
+
+// Exhibit 7: SEED
+// SEED is the one panel here driven in CBC rather than ECB, because that is the
+// only mode kisa-seed exposes: its raw-block helpers need a KISA_SEED_KEY the
+// package does not export. That is not a workaround so much as the shape of the
+// real thing — KISA's reference distribution is a CBC API, and it is CBC that
+// Korean deployments actually ran. The IV therefore gets its own field, exactly
+// like Camellia's CBC row, and the KAT panel reaches the raw block cipher by a
+// separate route (see `seedBlockEncrypt` in registry.ts).
+const seedKey = $('seed-key') as HTMLInputElement;
+const seedIv = $('seed-iv') as HTMLInputElement;
+const seedPlaintext = $('seed-plaintext') as HTMLInputElement;
+const seedOutput = $('seed-output');
+const seedRounds = $('seed-rounds');
+let seedLastCipherHex = '';
+
+if (!seedKey.value.trim() || seedKey.value.trim().length !== 32) {
+  seedKey.value = randomHex(16);
+}
+if (!seedIv.value.trim() || seedIv.value.trim().length !== 32) {
+  seedIv.value = randomHex(16);
+}
+// RFC 4269 §1.2: "The Feistel structure with 16-round".
+fillRoundDots(seedRounds, 16);
+
+$('seed-encrypt').addEventListener('click', () => {
+  try {
+    const key = parseKeyHex(seedKey.value, 16, 'SEED key');
+    const iv = parseKeyHex(seedIv.value, 16, 'SEED IV');
+    const cipher = KISA_SEED_CBC.SEED_CBC_Encrypt(
+      key,
+      iv,
+      utf8ToBytes(seedPlaintext.value),
+      0,
+      utf8ToBytes(seedPlaintext.value).length,
+    );
+    seedLastCipherHex = bytesToHex(cipher);
+    outputWithCopy(seedOutput, 'Ciphertext (hex)', seedLastCipherHex);
+  } catch (error) {
+    outputError(seedOutput, (error as Error).message);
+  }
+});
+
+$('seed-decrypt').addEventListener('click', () => {
+  try {
+    if (!seedLastCipherHex) throw new Error('Encrypt first to produce ciphertext');
+    const key = parseKeyHex(seedKey.value, 16, 'SEED key');
+    const iv = parseKeyHex(seedIv.value, 16, 'SEED IV');
+    const cipher = hexToBytes(seedLastCipherHex);
+    const plain = KISA_SEED_CBC.SEED_CBC_Decrypt(key, iv, cipher, 0, cipher.length);
+    outputWithCopy(seedOutput, 'Recovered plaintext', bytesToUtf8(plain), 'plaintext-result');
+  } catch (error) {
+    outputError(seedOutput, (error as Error).message);
   }
 });
 
