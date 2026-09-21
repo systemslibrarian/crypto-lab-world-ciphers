@@ -6,13 +6,21 @@
 # majors -- @noble/curves and @noble/hashes v2 dropped the export subpaths this
 # lab's source imports, and TypeScript 7 / vitest 4 broke a smaller set. Grouping
 # a breaking major together with the safe bumps makes the whole PR unmergeable,
-# so majors come individually and a human decides.
+# so majors arrive as individual pull requests.
+#
+# That is a statement about GROUPING ONLY. It is not a review gate, and arriving
+# individually is not the same as waiting for a human -- an individual major
+# auto-merges on a green gate exactly like everything else. These comments used
+# to end "and a human decides", which was simply false: PR #16 (vitest 4 -> 5)
+# was merged by github-actions with nobody involved.
 #
 # github-actions majors ARE grouped: checkout v4->v7, setup-node v4->v7 and the
 # Pages v5/v6 jumps were verified green across all 176 repos on 2026-08-18.
 #
-# The minor/patch group and the actions group auto-merge once this lab's own gate
-# passes on the PR -- see the dependabot-auto-merge job in the deploy workflow.
+# EVERY Dependabot pull request here -- both groups and every ungrouped major --
+# merges itself once this lab's own gate passes on it. Nothing in this repo reads
+# a bump's update-type. See the dependabot-auto-merge job in the deploy workflow,
+# which is where that decision actually lives.
 version: 2
 updates:
   - package-ecosystem: "npm"
