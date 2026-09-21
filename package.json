@@ -1,7 +1,7 @@
 {
   "name": "crypto-lab-world-ciphers",
   "version": "1.0.0",
-  "description": "Interactive browser demo of four national block ciphers (Camellia, ARIA, SM4, Kuznyechik), verified against official test vectors.",
+  "description": "Interactive browser demo of seven national block ciphers (Camellia, ARIA, SM4, Kuznyechik, Kalyna, BelT, SEED), verified against official test vectors.",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
@@ -32,8 +32,11 @@
     "vitest": "^5.0.0"
   },
   "dependencies": {
+    "@li0ard/belt": "^0.1.5",
+    "@li0ard/kalyna": "^0.1.6",
     "@li0ard/kuznyechik": "^0.1.5",
     "@noble/ciphers": "^2.4.0",
-    "gm-crypto": "^0.1.12"
+    "gm-crypto": "^0.1.12",
+    "kisa-seed": "^1.1.0"
   }
 }

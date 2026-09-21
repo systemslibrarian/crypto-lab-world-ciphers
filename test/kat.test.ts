@@ -4,6 +4,9 @@ import { KNOWN_ANSWER_TESTS } from '../src/ciphers/test-vectors';
 import { ariaDiffusion, ARIA_SB1, ARIA_IS1, Aria } from '../src/ciphers/aria';
 import { Camellia } from '../src/ciphers/camellia';
 import { Kuznyechik } from '@li0ard/kuznyechik';
+import { Kalyna128_256 } from '@li0ard/kalyna';
+import { Belt } from '@li0ard/belt';
+import { KISA_SEED_CBC } from 'kisa-seed';
 import { sm4Trace } from '../src/ciphers/sm4-trace';
 import { bytesToHex, hexToBytes } from '../src/ciphers/utils';
 
@@ -69,7 +72,7 @@ describe('SM4 round tracer (drives Exhibit 3 animation)', () => {
   });
 });
 
-// Encrypt/decrypt must round-trip at the block level for the three custom classes.
+// Encrypt/decrypt must round-trip at the block level for every cipher the page offers.
 describe('block round-trips (encrypt then decrypt recovers plaintext)', () => {
   const block = hexToBytes('00112233445566778899aabbccddeeff');
   const key32 = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
@@ -85,5 +88,61 @@ describe('block round-trips (encrypt then decrypt recovers plaintext)', () => {
   it('Kuznyechik-256', () => {
     const k = new Kuznyechik(key32);
     expect(bytesToHex(k.decryptBlock(k.encryptBlock(block)))).toBe(bytesToHex(block));
+  });
+});
+
+// The three ciphers added alongside the original four come from libraries rather
+// than from hand-rolled classes, so these pin the exact variant each one is wired
+// to. Picking the wrong Kalyna class or letting BelT take a short key would still
+// round-trip happily while no longer being the cipher the page names.
+describe('library-backed ciphers: variant and round-trip', () => {
+  const block = hexToBytes('00112233445566778899aabbccddeeff');
+  const key32 = hexToBytes('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+  const key16 = hexToBytes('000102030405060708090a0b0c0d0e0f');
+
+  it('Kalyna is the 128-bit-block / 256-bit-key variant', () => {
+    const k = new Kalyna128_256(key32);
+    expect(k.blockSize).toBe(16);
+    expect(k.keySize).toBe(32);
+  });
+
+  it('Kalyna-128/256 round-trips', () => {
+    const k = new Kalyna128_256(key32);
+    expect(bytesToHex(k.decrypt(k.encrypt(block)))).toBe(bytesToHex(block));
+  });
+
+  it('BelT-256 round-trips', () => {
+    const b = new Belt(key32);
+    expect(bytesToHex(b.decrypt(b.encrypt(block)))).toBe(bytesToHex(block));
+  });
+
+  it('SEED round-trips through the CBC entry points the page uses', () => {
+    const iv = new Uint8Array(16);
+    const ct = KISA_SEED_CBC.SEED_CBC_Encrypt(key16, iv, block, 0, block.length);
+    const pt = KISA_SEED_CBC.SEED_CBC_Decrypt(key16, iv, ct, 0, ct.length);
+    expect(bytesToHex(pt)).toBe(bytesToHex(block));
+  });
+
+  // The registry reaches SEED's raw block cipher through CBC under an all-zero IV.
+  // That identity is the whole basis of the SEED row in the KAT panel, so assert it
+  // directly rather than trusting the vector alone: a second, independent block must
+  // also encrypt to the same bytes whether it is the first block of its own call or
+  // not — which is only true if nothing is chaining.
+  it('SEED zero-IV CBC really is the raw block cipher (no chaining)', () => {
+    const iv = new Uint8Array(16);
+    const other = hexToBytes('ffeeddccbbaa99887766554433221100');
+    const first = CIPHERS.SEED.blockEncrypt(key16, other);
+    const viaTwoBlockMessage = KISA_SEED_CBC.SEED_CBC_Encrypt(
+      key16,
+      iv,
+      new Uint8Array([...other, ...other]),
+      0,
+      32,
+    );
+    // Block 1 of the two-block message matches the standalone single-block call...
+    expect(bytesToHex(viaTwoBlockMessage.slice(0, 16))).toBe(bytesToHex(first));
+    // ...and block 2 does NOT, because CBC chained it. That difference is exactly
+    // why the registry keeps only the first block.
+    expect(bytesToHex(viaTwoBlockMessage.slice(16, 32))).not.toBe(bytesToHex(first));
   });
 });
