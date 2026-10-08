@@ -28,8 +28,8 @@
     "@playwright/test": "^1.63.0",
     "gh-pages": "^6.3.0",
     "typescript": "^5.9.3",
-    "vite": "^8.3.1",
-    "vitest": "^5.0.2"
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
   },
   "dependencies": {
     "@li0ard/belt": "^0.1.5",
