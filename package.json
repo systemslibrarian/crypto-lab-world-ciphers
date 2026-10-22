@@ -25,11 +25,11 @@
   },
   "homepage": "https://github.com/systemslibrarian/crypto-lab-world-ciphers#readme",
   "devDependencies": {
-    "@axe-core/playwright": "^4.13.0",
-    "@playwright/test": "^1.64.0",
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
     "typescript": "^5.9.3",
     "vite": "^8.3.4",
-    "vitest": "^5.0.4"
+    "vitest": "^5.0.5"
   },
   "dependencies": {
     "@li0ard/belt": "^0.1.5",
