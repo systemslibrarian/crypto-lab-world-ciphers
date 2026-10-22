@@ -795,6 +795,11 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
     /— back to your byte: row [0-9A-F], col [0-9A-F] → [0-9A-F]{2}$/
   );
   await expect(page.locator('#aria-sbox-grid td.sg-hot')).toHaveCount(1);
+  await expect(page.locator('#aria-sbox-grid-region')).toHaveAttribute(
+    'aria-label',
+    /ARIA S1 inverse substitution table/,
+  );
+  await expect(page.locator('#aria-sbox-grid td.sg-hot')).toHaveText('3F');
   await scanAt('S-box applied and the grid lookup landed (reduced-motion end state)');
 
   // A different byte, so the highlighted row/column pair moves.

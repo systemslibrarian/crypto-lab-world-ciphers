@@ -515,6 +515,11 @@ test('the ARIA S-box exhibit proves S1 is not an involution and IS1 inverts it',
   await expect(page.locator('#aria-sbox-step')).toContainText(`= ${inv} — back to your byte`, {
     timeout: 5_000,
   });
+  await expect(page.locator('#aria-sbox-grid-region')).toHaveAttribute(
+    'aria-label',
+    /ARIA S1 inverse substitution table/,
+  );
+  await expect(page.locator('#aria-sbox-grid .sg-hot')).toHaveText(inv);
 
   // A malformed byte is refused rather than silently coerced.
   await page.locator('#aria-sbox-input').fill('zz');
@@ -533,8 +538,6 @@ test('the ARIA diffusion layer really is an involution', async ({ page }) => {
     expect(once).not.toBe(state); // A really mixes
     expect(twice).toBe(state); // ...and A(A(x)) comes back
     await expect(page.locator('#aria-diff-twice .label')).toContainText('involution holds');
-    // A is a byte permutation, so the multiset of bytes is preserved.
-    expect(hexToBytes(once).sort().join()).toBe(hexToBytes(state).sort().join());
   }
 
   await page.locator('#aria-diff-input').fill('nothex');
