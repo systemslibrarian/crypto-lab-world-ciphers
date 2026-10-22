@@ -2,10 +2,14 @@
 
 export function hexToBytes(hex: string): Uint8Array {
   hex = hex.replace(/\s/g, '');
-  if (hex.length % 2 !== 0) hex = '0' + hex;
+  if (hex.length % 2 !== 0) throw new Error(`Hex string has odd length: ${hex.length}`);
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+    const pair = hex.slice(i * 2, i * 2 + 2);
+    // parseInt accepts a valid prefix (for example, "0g" becomes 0), so the
+    // whole byte must be checked before it is converted.
+    if (!/^[0-9a-fA-F]{2}$/.test(pair)) throw new Error(`Not hex at offset ${i * 2}`);
+    bytes[i] = Number.parseInt(pair, 16);
   }
   return bytes;
 }

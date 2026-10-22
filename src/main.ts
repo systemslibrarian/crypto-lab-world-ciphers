@@ -261,13 +261,18 @@ $('aria-sbox-go').addEventListener('click', () => {
 
 // --- ARIA S-box grid animation: watch the table lookup happen ---
 const ariaSboxGrid = $('aria-sbox-grid') as HTMLTableElement;
+const ariaSboxGridRegion = $('aria-sbox-grid-region');
 const ariaSboxStep = $('aria-sbox-step');
 let ariaSboxTimers: number[] = [];
 
-// Render the 16x16 S1 grid once. Each cell holds one output byte; data attributes
-// let us address cells by (row, col) = (high nibble, low nibble) of the index.
-const renderAriaSboxGrid = (): void => {
+// Render either 16x16 table. Each cell holds one output byte; data attributes let
+// us address cells by (row, col) = (high nibble, low nibble) of the index.
+const renderAriaSboxGrid = (table: Uint8Array, name: 'S1' | 'S1 inverse'): void => {
   ariaSboxGrid.innerHTML = '';
+  ariaSboxGridRegion.setAttribute(
+    'aria-label',
+    `ARIA ${name} substitution table, 16 by 16 grid of 256 output bytes`,
+  );
   const header = document.createElement('tr');
   const corner = document.createElement('th');
   corner.textContent = '';
@@ -291,7 +296,7 @@ const renderAriaSboxGrid = (): void => {
     for (let c = 0; c < 16; c++) {
       const td = document.createElement('td');
       const idx = (r << 4) | c;
-      td.textContent = hex2(ARIA_SB1[idx]);
+      td.textContent = hex2(table[idx]);
       td.dataset.idx = String(idx);
       td.className = 'sg-cell';
       tr.appendChild(td);
@@ -299,7 +304,7 @@ const renderAriaSboxGrid = (): void => {
     ariaSboxGrid.appendChild(tr);
   }
 };
-renderAriaSboxGrid();
+renderAriaSboxGrid(ARIA_SB1, 'S1');
 
 const clearSboxHighlights = (): void => {
   ariaSboxGrid.querySelectorAll('.sg-hot,.sg-row-hot,.sg-col-hot').forEach((el) => {
@@ -337,11 +342,18 @@ const animateAriaSbox = (): void => {
   const inv = ARIA_IS1[s1];
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const steps: Array<() => void> = [
-    () => highlightLookup(x, s1, `S₁(${hex2(x)})`),
-    () => highlightLookup(s1, s1s1, `S₁(${hex2(s1)}) — different cell, so S₁ is NOT an involution`),
     () => {
-      // Show the inverse landing back on x, but the inverse table isn't rendered,
-      // so highlight the S1 cell whose output equals inv==x to make the return visible.
+      renderAriaSboxGrid(ARIA_SB1, 'S1');
+      highlightLookup(x, s1, `S₁(${hex2(x)})`);
+    },
+    () => {
+      renderAriaSboxGrid(ARIA_SB1, 'S1');
+      highlightLookup(s1, s1s1, `S₁(${hex2(s1)}) — different cell, so S₁ is NOT an involution`);
+    },
+    () => {
+      // The inverse is a distinct table. Swap the rendered bytes before
+      // highlighting the lookup so the lit cell actually contains x.
+      renderAriaSboxGrid(ARIA_IS1, 'S1 inverse');
       highlightLookup(s1, inv, `S₁⁻¹(${hex2(s1)}) = ${hex2(inv)} — back to your byte`);
     },
   ];

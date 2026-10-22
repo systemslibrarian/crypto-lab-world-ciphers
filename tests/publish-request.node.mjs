@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -8,7 +8,16 @@ import { fileURLToPath, URL } from 'node:url';
 import process from 'node:process';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const npmCli = join(process.execPath, '..', '..', 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js');
+
+function npmInvocation() {
+  // npm exposes the CLI that launched this child. Do not infer it from the Node binary:
+  // Homebrew installs Node and npm in separate prefixes, so that assumption breaks on Node 26.
+  if (process.env.npm_execpath) {
+    return { command: process.execPath, args: [process.env.npm_execpath] };
+  }
+  // Preserve direct `node --test` use as well; PATH below retains the platform npm launcher.
+  return { command: process.platform === 'win32' ? 'npm.cmd' : 'npm', args: [] };
+}
 
 // Replace only the external GitHub boundary; exercise the real npm script.
 // Neither control dispatches a workflow or uploads any local build.
@@ -18,7 +27,8 @@ function request(exitCode) {
   writeFileSync(gh, '#!/usr/bin/env node\nconsole.log(JSON.stringify(process.argv.slice(2)));\nprocess.exit(Number(process.env.PUBLISH_CONTROL_EXIT));\n');
   chmodSync(gh, 0o700);
   try {
-    return spawnSync(process.execPath, [npmCli, 'run', 'deploy', '--silent'], {
+    const npm = npmInvocation();
+    return spawnSync(npm.command, [...npm.args, 'run', 'deploy', '--silent'], {
       cwd: root,
       env: { ...process.env, PATH: dir + delimiter + process.env.PATH, GH_TOKEN: '', PUBLISH_CONTROL_EXIT: String(exitCode) },
       encoding: 'utf8',
@@ -43,4 +53,17 @@ test('a rejected publishing request retains its failing exit status', () => {
   const result = request(73);
   assert.equal(result.error, undefined);
   assert.equal(result.status, 73);
+});
+
+test('Dependabot auto-merge cannot hide a failed deployment dispatch', () => {
+  const workflow = readFileSync(join(root, '.github', 'workflows', 'deploy-pages.yml'), 'utf8');
+  const dispatch = workflow.indexOf(
+    'gh workflow run deploy-pages.yml --repo "$GITHUB_REPOSITORY" --ref main',
+  );
+  assert.notEqual(dispatch, -1, 'the auto-merge path must dispatch the gated main workflow');
+  assert.doesNotMatch(
+    workflow.slice(dispatch, dispatch + 180),
+    /\|\|/,
+    'a failed post-merge dispatch must fail the job instead of being reduced to a warning',
+  );
 });
