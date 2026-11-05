@@ -138,6 +138,7 @@ jobs:
           # and the site would keep serving the previous build. Ask for it explicitly;
           # a workflow_dispatch through the API is not suppressed. The dispatched run
           # is the same gate-then-deploy pipeline, so a bad merge still ships nothing.
+          #
           # A dispatch failure after the merge means the new source is not proven
           # deployed. Let that failure make this job red instead of turning a stale
           # Pages site into an easy-to-miss warning on an otherwise green run.
