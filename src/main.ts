@@ -5,6 +5,7 @@ import { Kalyna128_256 } from '@li0ard/kalyna';
 import { Belt } from '@li0ard/belt';
 import { KISA_SEED_CBC } from 'kisa-seed';
 import { Aria, ARIA_IS1, ARIA_SB1, ariaDiffusion } from './ciphers/aria';
+import { renderError } from './error-output';
 import { Camellia } from './ciphers/camellia';
 import { sm4Trace, type SM4RoundStep } from './ciphers/sm4-trace';
 import { CIPHERS } from './ciphers/registry';
@@ -75,7 +76,9 @@ const outputWithCopy = (el: HTMLElement, label: string, value: string, className
 };
 
 const outputError = (el: HTMLElement, message: string): void => {
-  el.innerHTML = `<span class="label">Error</span><span class="error-msg">${message}</span>`;
+  // Rendered by src/error-output.ts with DOM APIs. See its header for the codeFlow
+  // CodeQL flagged and for why no input text can reach this message today.
+  renderError(el, document, message);
 };
 
 const fillRoundDots = (el: HTMLElement, rounds: number): void => {
