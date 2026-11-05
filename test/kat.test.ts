@@ -10,6 +10,18 @@ import { KISA_SEED_CBC } from 'kisa-seed';
 import { sm4Trace } from '../src/ciphers/sm4-trace';
 import { bytesToHex, hexToBytes } from '../src/ciphers/utils';
 
+describe('hex fixture parsing', () => {
+  it('accepts complete bytes and optional presentation whitespace', () => {
+    expect(hexToBytes('00 aF\n10')).toEqual(Uint8Array.from([0x00, 0xaf, 0x10]));
+  });
+
+  it('rejects odd or partially parsed bytes instead of guessing', () => {
+    expect(() => hexToBytes('abc')).toThrow(/odd length/i);
+    expect(() => hexToBytes('0g')).toThrow(/not hex at offset 0/i);
+    expect(() => hexToBytes('00g0')).toThrow(/not hex at offset 2/i);
+  });
+});
+
 // Correctness proof: every implementation must reproduce the official vector from its
 // defining standard. If any of these fail, the demo's "real crypto, no simulation"
 // claim is broken — so they gate CI.
