@@ -107,6 +107,8 @@ jobs:
       pull-requests: write
       actions: write   # required by the deploy dispatch; without it gh workflow run 403s
     steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@v3
       # No metadata step. This job carried `dependabot/fetch-metadata@v3` under
       # `id: meta` whose outputs nothing ever read -- inert, but an `id:` on a
       # metadata action reads as a version gate that must be wired up somewhere
@@ -115,6 +117,7 @@ jobs:
       # add the step back AND branch on it, and fix the comments in the same
       # commit so the two cannot drift apart again.
       - name: Merge any bump whose gate went green
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
         # Retry: a sibling PR merging first moves main underneath us and GitHub
         # rejects with "Base branch was modified". That is benign, so try again
         # rather than failing the run over a race.
