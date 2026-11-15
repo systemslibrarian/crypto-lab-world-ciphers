@@ -11,7 +11,7 @@ World Ciphers demonstrates seven national symmetric block ciphers: Camellia-256 
 - Kalyna-128/256: Required for Ukrainian state information systems; the one cipher here that also defines 256- and 512-bit block sizes.
 - BelT-256: Required for Belarusian state information systems.
 - SEED: Interoperating with Korean legacy financial and e-commerce software; ARIA is the newer Korean standard and the one to reach for otherwise.
-- Do not use SM4 or SEED alone for long-term data — a fixed 128-bit key gives roughly 64-bit post-quantum security, below NIST's recommended 128-bit post-quantum threshold.
+- Do not read SM4's or SEED's fixed 128-bit key as a post-quantum failure, and do not credit it with headroom either: Grover's square-root bound gives an idealized 2⁶⁴ query count against a 128-bit key, not a real attack cost, and NIST sets no 128-bit post-quantum threshold — NIST IR 8547 (final, October 2026) defines post-quantum security Category 1 by key search on a 128-bit block cipher (AES-128). A 256-bit key is the conservative choice for long-lived data, and neither cipher offers one.
 - Do not credit a BelT-128 or BelT-192 key with 256-bit strength: BelT's block cipher always takes 256 bits, and a shorter key is expanded into them by a fixed public rule that adds length, not entropy.
 - Do not use Kuznyechik outside of Russian compliance requirements — S-box design transparency concerns are unresolved.
 - None of these replace AES-256-GCM as a general-purpose default.
@@ -39,12 +39,14 @@ The demo now opens with a **Start Here** vocabulary panel that defines block, ke
 
 ## What Can Go Wrong
 - ECB mode leaks structure: identical plaintext blocks produce identical ciphertext blocks (the "ECB penguin"), so a confidential mode like CBC or an AEAD mode is required.
-- SM4's and SEED's fixed 128-bit keys give only about 64-bit security against Grover-style quantum search, below NIST's 128-bit post-quantum threshold for long-term data.
+- SM4's and SEED's fixed 128-bit keys leave no room to grow. Grover's square-root bound gives an idealized 2⁶⁴ query count against a 128-bit key, which is not a real attack cost, and NIST sets no 128-bit post-quantum threshold: NIST IR 8547 (final, October 2026) defines post-quantum security Category 1 by key search on a 128-bit block cipher (AES-128) and expects NIST-approved symmetric primitives with at least 128 bits of classical security to meet at least that category. A 256-bit key is the conservative choice for long-lived data, and neither cipher offers one.
 - A cipher with no route into the protocols people actually use gets carried by whatever workaround is available, and the workaround becomes the attack surface. SEED is the worked example: mandated for Korean e-commerce, absent from browsers, delivered by ActiveX for over a decade.
 - "No published attacks" is weak evidence when few people have had a reason to attack. BelT and Kalyna are both unbroken and both far less studied than AES or Camellia.
 - Kuznyechik's S-box design transparency concerns (Biryukov, Perrin & Udovenko 2016; Perrin 2019) remain unresolved, which is why it is best confined to mandated compliance use.
 - Reaching for a national cipher outside its compliance mandate trades AES's scrutiny and tooling for weaker ecosystem support with no security gain.
 - A raw block cipher provides no integrity; without an authenticated mode, ciphertext can be tampered with undetected, and IV/nonce reuse in CBC further degrades confidentiality.
+
+**Standards reviewed 15 November 2026:** [NIST IR 8547, *Transition to Post-Quantum Cryptography Standards* (final, October 2026)](https://nvlpubs.nist.gov/nistpubs/ir/2026/NIST.IR.8547.pdf), Table 1 and §4.1.3, defines post-quantum security Category 1 as "key search on a block cipher with a 128-bit key" (example: AES-128) and states that "all NIST-approved symmetric primitives that provide at least 128 bits of classical security are believed to meet the requirements of at least Category 1 security." It sets no 128-bit post-quantum threshold; earlier wording in this README said it did. The 2⁶⁴ figure for a 128-bit key is Grover's idealized query count, not a practical attack cost, and SM4 and SEED are not NIST-approved primitives, so the comparison to AES-128 rests on key length alone.
 
 ## Real-World Usage
 - Camellia-256 is endorsed by CRYPTREC, standardized in TLS cipher suites, and used as an AES alternative in Japan.
