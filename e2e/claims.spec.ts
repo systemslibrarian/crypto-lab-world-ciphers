@@ -570,6 +570,51 @@ test('the SM4 animation runs all 32 real rounds', async ({ page }) => {
   await expect(page.locator('#sm4-anim-round')).toHaveText(/Round 32 of 32/, { timeout: 20_000 });
 });
 
+test('the prose agrees with the mechanisms the page itself shows', async ({ page }) => {
+  const flat = async (locator: ReturnType<Page['locator']>): Promise<string> =>
+    ((await locator.textContent()) ?? '').replace(/\s+/g, ' ').trim();
+
+  // SM4 round order. The animation plays the stages in the standard's order
+  // (GB/T 32907-2016: Xi+4 = Xi XOR L(tau(Xi+1 XOR Xi+2 XOR Xi+3 XOR rk))), so the
+  // paragraph that introduces it must name them in that same order: round key
+  // first, then the T-transform, then the XOR into the oldest word.
+  const stages = (await page.locator('#sm4-anim .ra-stage').allTextContents()).map((t) => t.trim());
+  expect(stages).toEqual(['⊕ round key', 'substitute (S-box)', 'mix (linear L)', 'new word']);
+  const sm4Intro = await flat(page.locator('#sm4-anim').locator('xpath=preceding-sibling::p[1]'));
+  expect(sm4Intro).toContain('⊕ round key → substitute → mix');
+  expect(sm4Intro).not.toContain('add-round-key');
+
+  // The Camellia callout claims Camellia is "one of only two" ciphers here on the
+  // TLS Standards Track. The comparison table is the page's own evidence for that
+  // count, so the cipher the callout names must be the one the table marks.
+  const names = (await page.locator('.comparison-table thead th').allTextContents())
+    .map((t) => t.trim());
+  const statuses = await page
+    .locator('.comparison-table tbody tr')
+    .filter({ has: page.locator('th', { hasText: 'IETF status' }) })
+    .locator('td')
+    .allTextContents();
+  const standardsTrack = statuses
+    .map((status, i) => (status.trim().startsWith('Standards Track') ? names[i + 1] : null))
+    .filter((name): name is string => name !== null);
+  expect(standardsTrack).toEqual(['Camellia-256', 'SEED']);
+  const callout = await flat(page.locator('p', { hasText: 'IETF Standards Track for TLS' }));
+  expect(callout).toContain('only two ciphers here');
+  expect(callout).toContain('SEED is the other (RFC 4162)');
+  expect(callout).not.toContain('ARIA is the other');
+
+  // Exhibit 1 shows CBC erasing the ECB pattern, so the warning below it cannot
+  // deny that CBC hides block structure. What raw CBC lacks is tamper detection.
+  expect(await flat(page.locator('p', { hasText: 'chaining destroys the pattern' })))
+    .toContain('chaining destroys the pattern');
+  const ecbWarning = await flat(
+    page.locator('.callout.danger', { hasText: 'Never use ECB for real data' }),
+  );
+  expect(ecbWarning).toContain('ECB does neither');
+  expect(ecbWarning).toContain('raw CBC hides the structure but still does not detect tampering');
+  expect(ecbWarning).not.toContain('even raw CBC do neither');
+});
+
 test('the avalanche statistic matches the ciphertexts it is measured from', async ({ page }) => {
   for (const cipher of CIPHER_OPTIONS) {
     await page.locator('#av-cipher').selectOption(cipher);

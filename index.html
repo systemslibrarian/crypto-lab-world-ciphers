@@ -364,7 +364,7 @@
       <div class="callout">
         <strong>💡 Why this matters</strong>
         <p>Camellia is on the IETF Standards Track for TLS (RFC 5932, originally RFC 4132), one of
-        only two ciphers here that are — ARIA is the other (RFC 6209). But Camellia stands out for
+        only two ciphers here that are — SEED is the other (RFC 4162). But Camellia stands out for
         breadth of independent vetting: equivalent security to AES, a fully published design
         rationale, and active maintenance by Japan's CRYPTREC. For systems that need an AES
         alternative with the strongest international scrutiny, Camellia is the most defensible
@@ -543,9 +543,10 @@
       <p class="note-secondary">
         Encrypting above kicks off this schematic. SM4 keeps the 128-bit block as four 32-bit words
         (X₀ X₁ X₂ X₃). Each <a href="#term-round" class="jargon">round</a> takes the newest three
-        words plus a round key, pushes them through the
-        <strong>substitute → mix → add-round-key</strong> pipeline (that is the T-transform), and the
-        result becomes the next word — a <a href="#term-feistel" class="jargon">Feistel</a> shift.
+        words, pushes them through the
+        <strong>⊕ round key → substitute → mix</strong> pipeline (substitute then mix is the
+        T-transform), and XORs the result into the oldest word to make the next word — a
+        <a href="#term-feistel" class="jargon">Feistel</a> shift.
         Watch each stage light up: this is <em>why</em> 32 rounds diffuses a single input bit across
         the whole block, not just a dot to count.
       </p>
@@ -1057,7 +1058,8 @@
         <strong>🔴 Never use ECB for real data</strong>
         <p>ECB is offered in Exhibit 1 strictly to make this failure visible. Production systems use
         an authenticated mode such as <strong>AES-256-GCM</strong> (or Camellia/SM4 in GCM). It hides
-        block structure <em>and</em> detects tampering — ECB and even raw CBC do neither.</p>
+        block structure <em>and</em> detects tampering — ECB does neither, and raw CBC hides the
+        structure but still does not detect tampering.</p>
       </div>
     </section>
 
