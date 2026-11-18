@@ -59,7 +59,9 @@ for (const width of [1280, 380]) {
     expect(text).toContain('Those two points are commentary, not ICCS statements.');
     const hrefs = await panel.locator('a[href^="http"]').evaluateAll((links) => links.map((a) => (a as HTMLAnchorElement).href));
     expect(hrefs).toContain('https://niccs.org.cn/niccs/Notice/pc/content/content_1975896137741635584.html');
-    expect(hrefs.some((href) => href.includes('eprint.iacr.org'))).toBe(false);
+    // Compared as parsed hostnames, not substrings: a substring test also matches
+    // a host that merely contains the name.
+    expect(hrefs.map((href) => new URL(href).hostname)).not.toContain('eprint.iacr.org');
 
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
   });
