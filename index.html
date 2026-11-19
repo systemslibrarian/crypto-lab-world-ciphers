@@ -164,6 +164,7 @@
       <a href="#exhibit-8">🌊 Avalanche</a>
       <a href="#exhibit-9">🧩 ECB vs CBC</a>
       <a href="#exhibit-10">📊 Comparison</a>
+      <a href="#national-standards">National standards</a>
     </nav>
 
     <!-- ============================================================ -->
@@ -1158,6 +1159,133 @@
         <a href="https://systemslibrarian.github.io/crypto-compare/" class="cross-link">
           systemslibrarian.github.io/crypto-compare/</a></p>
       </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- PANEL — national standards: same families, separate specs      -->
+    <!-- Text only. Every date and figure is cited in the Sources line   -->
+    <!-- and in the README section of the same name.                     -->
+    <!-- ============================================================ -->
+    <section id="national-standards" class="exhibit standards-panel" aria-labelledby="national-standards-title">
+      <h2 id="national-standards-title">Panel — National Standards: Same Families, Separate Specifications</h2>
+
+      <p class="standards-lead">
+        Every cipher in this lab is a 128-bit block cipher, like AES. That is the usual shape of a
+        national standard: <strong>the same mathematical family as everyone else, with a different
+        construction, different parameters, and domestic control of the specification</strong>. It has
+        rarely meant different mathematics.
+      </p>
+
+      <h3>The pattern, in China's SM suite</h3>
+      <div class="comparison-table-wrapper" role="region" tabindex="0"
+           aria-label="International and Chinese standards compared by family, scrollable">
+        <table class="comparison-table standards-table">
+          <caption class="sr-only">For three roles, a widely used international standard, the Chinese national standard, what the two share, and what differs</caption>
+          <thead>
+            <tr>
+              <th scope="col">Role</th>
+              <th scope="col">Widely used</th>
+              <th scope="col">Chinese national standard</th>
+              <th scope="col">Same family</th>
+              <th scope="col">What differs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Block cipher</th>
+              <td>AES (FIPS 197)</td>
+              <td>SM4 (GB/T 32907-2016)</td>
+              <td>128-bit block ciphers built from S-boxes and linear mixing</td>
+              <td>AES is a substitution-permutation network with 128-, 192- or 256-bit keys. SM4 is a
+                32-round non-balanced Feistel network with a 128-bit key only
+                (<a href="#exhibit-3">Exhibit 3</a>).</td>
+            </tr>
+            <tr>
+              <th scope="row">Hash</th>
+              <td>SHA-256 (FIPS 180-4)</td>
+              <td>SM3 (GB/T 32905-2016)</td>
+              <td>Merkle–Damgård hashes with 512-bit blocks, 64 rounds and a 256-bit digest</td>
+              <td>A different message expansion and compression function
+                (<a href="https://systemslibrarian.github.io/crypto-lab-world-hashes/">World Hashes</a>,
+                Exhibit 1).</td>
+            </tr>
+            <tr>
+              <th scope="row">Signature</th>
+              <td>ECDSA (FIPS 186-5), commonly on NIST P-256</td>
+              <td>SM2 (GB/T 32918)</td>
+              <td>Elliptic-curve signatures over a prime field</td>
+              <td>A different curve and a different signing equation. SM2 hashes with SM3 and binds a
+                signer identity into the digest
+                (<a href="https://systemslibrarian.github.io/crypto-lab-sm2-forge/">SM2 Forge</a>).
+                Neither is implemented in this lab.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The two entries in each row do not interoperate. Both parties have to implement the same
+        algorithm, which is what <a href="#exhibit-1">Exhibit 1</a> shows for Camellia and AES: identical
+        key and plaintext, different ciphertext. "Different" is a statement about compatibility. It is
+        not evidence about strength in either direction.
+      </p>
+
+      <h3>The post-quantum continuation</h3>
+      <p class="standards-status" id="standards-status">
+        <strong>Status.</strong> As of November 2026, NGCC is in its first round; the ICCS proposal pages
+        list Round 1 candidates only (checked 18 November 2026). Nothing in round one is standardized or
+        deployed.
+      </p>
+      <p>
+        China's Institute of Commercial Cryptography Standards (ICCS) is running NGCC
+        (Next-generation Commercial Cryptographic Algorithms), an open competition on the NIST model, for
+        a new generation of commercial algorithms after the SM suite.
+      </p>
+      <ul class="standards-timeline">
+        <li><strong>5 February 2025.</strong> ICCS launches NGCC and publishes draft requirements for comment.</li>
+        <li><strong>9 October 2025.</strong> Formal calls for public-key and hash proposals.</li>
+        <li><strong>30 June 2026.</strong> Submissions close for both calls.</li>
+        <li><strong>4 September 2026.</strong> Draft requirements for a block-cipher track are published
+          for comment. This is the track that would follow SM4, and it is at the draft-requirements stage.</li>
+        <li><strong>20 September 2026.</strong> 119 first-round candidates are published: 34 signature
+          schemes, 41 key-encapsulation mechanisms, 9 key-exchange schemes and 35 hash functions.</li>
+      </ul>
+      <p>
+        The 84 public-key candidates come from the families other post-quantum efforts use: 43
+        lattice-based, 21 code-based, 6 multivariate, 5 isogeny-based, 4 hash-based signatures, 4
+        symmetric (VOLE-in-the-head) and 1 other group action. What will differ is the specific
+        algorithm. ICCS states that NGCC "will not accept the algorithms that are in or have finished the
+        standardization process in international organizations, countries and regions, or related
+        variants with insignificant modifications." So an NGCC selection will not be ML-KEM or ML-DSA and
+        will not interoperate with them, in the same way that SM4 does not interoperate with AES.
+      </p>
+      <p>
+        <strong>Stated reasons, and commentary.</strong> ICCS's own wording is that the programme is "in
+        response to the threat of quantum computing" and meant to "facilitate the standardization of the
+        next-generation commercial cryptographic algorithms." Outside commentary adds its own reading. A
+        postquantum.com article on the first round (23 September 2026) describes NGCC as part of a
+        "broader push for cryptographic sovereignty", and its author treats 2029 as the earliest plausible
+        date for NGCC standards. An earlier article on the same site (April 2026) says the process targets
+        finalists around 2029. Both are commentary, not ICCS statements.
+      </p>
+      <p class="standards-sources">
+        <strong>Sources.</strong>
+        Dates of launch, the public-key call and its deadline:
+        <a href="https://niccs.org.cn/niccs/Notice/pc/content/content_1975896137741635584.html">ICCS, Call for Proposals for the Next-generation Public-Key Cryptographic Algorithms</a>
+        (9 October 2025). The hash call and its deadline:
+        <a href="https://www.niccs.org.cn/niccs/Notice/pc/content/content_1975892908773478400.html">ICCS, Call for Proposals for the Next-generation Cryptographic Hash Algorithms</a>
+        (9 October 2025). The acceptance rule: ICCS, <em>Submission Requirements for Public-Key
+        Cryptographic Algorithms</em> (October 2025), §1(5), attached to the public-key call. The stated
+        purpose: ICCS, <em>Feedback on the Comments Received</em> (October 2025), §1, attached to the
+        public-key call. The block-cipher draft, the candidate counts and the family counts: M.-J. O.
+        Saarinen,
+        <a href="https://eprint.iacr.org/2026/2266"><em>Chinese NGCC Algorithms: The First Week of AI Cryptanalysis</em></a>
+        (ePrint 2026/2266, 29 September 2026), abstract, §1.1 and Table 1. Commentary, each cited for
+        its own claim: the sovereignty reading and 2029 as an earliest date for standards,
+        <a href="https://postquantum.com/security-pqc/china-ngcc-candidate-flaws/">postquantum.com on the first round</a>
+        (23 September 2026); finalists around 2029,
+        <a href="https://postquantum.com/post-quantum/pqc-standards-fragmentation-multinationals/">postquantum.com on standards fragmentation</a>
+        (23 April 2026, updated 15 July 2026).
+      </p>
     </section>
   </main>
 

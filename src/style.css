@@ -555,6 +555,47 @@ button.copy-btn:hover {
   color: var(--text-secondary);
 }
 
+/* ===== National-standards panel (text only) ===== */
+.standards-panel p,
+.standards-panel li {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.standards-panel p {
+  margin: 0.9rem 0;
+}
+
+.standards-panel .standards-lead {
+  font-size: 1.02rem;
+}
+
+.standards-panel a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.standards-status {
+  border-left: 3px solid var(--callout-border);
+  padding-left: 0.9rem;
+}
+
+.standards-timeline {
+  margin: 0.6rem 0 1rem 1.2rem;
+}
+
+.standards-timeline li {
+  margin: 0.3rem 0;
+}
+
+.standards-table td {
+  vertical-align: top;
+}
+
+.standards-sources {
+  font-size: 0.86rem;
+}
+
 /* ===== S-box Visualizer ===== */
 .sbox-demo {
   display: flex;
