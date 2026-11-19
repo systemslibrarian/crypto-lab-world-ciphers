@@ -65,12 +65,16 @@ The second half follows the pattern into post-quantum cryptography. NGCC (Next-g
 |---|---|
 | ICCS launched NGCC on 5 February 2025 | [ICCS call for public-key proposals](https://niccs.org.cn/niccs/Notice/pc/content/content_1975896137741635584.html), 9 October 2025, first sentence |
 | Formal public-key call on 9 October 2025; deadline 24:00 Beijing time, 30 June 2026 | The same page |
-| Hash call also on 9 October 2025; draft block-cipher requirements on 4 September 2026 | Saarinen, *Chinese NGCC Algorithms: The First Week of AI Cryptanalysis* (29 September 2026), §1.1 |
+| Hash call also on 9 October 2025, with the same deadline | [ICCS call for hash proposals](https://www.niccs.org.cn/niccs/Notice/pc/content/content_1975892908773478400.html), 9 October 2025 |
+| Draft block-cipher requirements on 4 September 2026 | M.-J. O. Saarinen, [*Chinese NGCC Algorithms: The First Week of AI Cryptanalysis*](https://eprint.iacr.org/2026/2266) (ePrint 2026/2266, 29 September 2026), §1.1 |
 | 119 first-round candidates on 20 September 2026: 34 signature, 41 KEM, 9 key exchange, 35 hash | The same paper, abstract and §1.1 |
 | 84 public-key candidates by family: 43 lattice, 21 code, 6 multivariate, 5 isogeny, 4 hash-based signatures, 4 symmetric VOLE-in-the-head, 1 other group action | The same paper, Table 1 |
 | NGCC "will not accept the algorithms that are in or have finished the standardization process in international organizations, countries and regions, or related variants with insignificant modifications" | ICCS, *Submission Requirements for Public-Key Cryptographic Algorithms* (October 2025), §1(5), attached to the call |
 | The programme is "in response to the threat of quantum computing" and meant to "facilitate the standardization of the next-generation commercial cryptographic algorithms" | ICCS, *Feedback on the Comments Received on the Draft Submission Requirements and Evaluation Criteria* (October 2025), §1, attached to the call |
-| Commentary: a push for cryptographic sovereignty; finalists around 2029 | [postquantum.com on the first round](https://postquantum.com/security-pqc/china-ngcc-candidate-flaws/) (23 September 2026) and [on standards fragmentation](https://postquantum.com/post-quantum/pqc-standards-fragmentation-multinationals/). Labelled as commentary on the page; neither is an ICCS statement |
+| Commentary: NGCC as part of a "broader push for cryptographic sovereignty"; 2029 as that author's earliest plausible date for NGCC standards | [postquantum.com on the first round](https://postquantum.com/security-pqc/china-ngcc-candidate-flaws/) (23 September 2026) |
+| Commentary: the process targets finalists around 2029 | [postquantum.com on standards fragmentation](https://postquantum.com/post-quantum/pqc-standards-fragmentation-multinationals/) (23 April 2026, updated 15 July 2026) |
+
+Both commentary rows are labelled as commentary on the page, and neither is an ICCS statement. Each article is cited only for the claim it makes: "finalists around 2029" and "2029 at the earliest for standards" are different claims from different articles. The panel links no other commentary.
 
 What the panel does not claim: that any NGCC candidate is secure or insecure, that a national standard is weaker or stronger for being national, or that ICCS has announced a schedule beyond round one.
 

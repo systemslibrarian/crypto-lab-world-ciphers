@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * The national-standards panel is text only, so there is nothing to recompute.
@@ -55,13 +57,35 @@ for (const width of [1280, 380]) {
     expect(publicKey).toBe(sign + kem + kex);
     expect(byFamily.reduce((a, b) => a + b, 0)).toBe(publicKey);
 
-    // Commentary is labelled as commentary, and no link goes to ePrint.
-    expect(text).toContain('Those two points are commentary, not ICCS statements.');
+    // Commentary is labelled as commentary, and each claim sits with the article
+    // that makes it: the sovereignty reading and "2029 at the earliest for
+    // standards" are the first-round article's; "finalists around 2029" is the
+    // fragmentation article's.
+    expect(text).toContain('Both are commentary, not ICCS statements.');
+    expect(text).toMatch(/article on the first round \(23 September 2026\) describes NGCC as part of a "broader push for cryptographic sovereignty", and its author treats 2029 as the earliest plausible date for NGCC standards/);
+    expect(text).toMatch(/An earlier article on the same site \(April 2026\) says the process targets finalists around 2029/);
+
     const hrefs = await panel.locator('a[href^="http"]').evaluateAll((links) => links.map((a) => (a as HTMLAnchorElement).href));
+    // Both ICCS calls are cited from ICCS, and the survey paper is linked.
     expect(hrefs).toContain('https://niccs.org.cn/niccs/Notice/pc/content/content_1975896137741635584.html');
-    // Compared as parsed hostnames, not substrings: a substring test also matches
-    // a host that merely contains the name.
-    expect(hrefs.map((href) => new URL(href).hostname)).not.toContain('eprint.iacr.org');
+    expect(hrefs).toContain('https://www.niccs.org.cn/niccs/Notice/pc/content/content_1975892908773478400.html');
+    expect(hrefs).toContain('https://eprint.iacr.org/2026/2266');
+    // No outside link that supports nothing on the page. Compared as parsed
+    // hostnames, not substrings: a substring test also matches a host that merely
+    // contains the name.
+    const hosts = [...new Set(hrefs.map((href) => new URL(href).hostname))].sort();
+    expect(hosts).toEqual(['eprint.iacr.org', 'niccs.org.cn', 'postquantum.com', 'systemslibrarian.github.io', 'www.niccs.org.cn']);
+    // The README's source table and the panel cite the same outside pages.
+    const readme = readFileSync(join(process.cwd(), 'README.md'), 'utf8');
+    for (const href of hrefs.filter((h) => new URL(h).hostname !== 'systemslibrarian.github.io')) {
+      expect(readme, `README lists ${href}`).toContain(`(${href})`);
+    }
+    const readmeCommentary = [...readme.matchAll(/\((https:\/\/[^)\s]+)\)/g)]
+      .map((m) => m[1])
+      .filter((url) => !['niccs.org.cn', 'www.niccs.org.cn', 'eprint.iacr.org', 'systemslibrarian.github.io', 'github.com'].includes(new URL(url).hostname))
+      .filter((url) => readme.indexOf(`(${url})`) > readme.indexOf('| Statement in the panel | Source |'))
+      .filter((url) => readme.indexOf(`(${url})`) < readme.indexOf('What the panel does not claim'));
+    for (const url of readmeCommentary) expect(hrefs, `the panel links ${url}`).toContain(url);
 
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
   });
