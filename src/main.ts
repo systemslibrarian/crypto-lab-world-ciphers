@@ -18,6 +18,7 @@ import {
   ecbDecrypt,
   ecbEncrypt,
   hexToBytes,
+  pkcs7Pad,
   randomBytes,
   randomHex,
   utf8ToBytes,
@@ -103,6 +104,15 @@ const parseKeyHex = (raw: string, bytes: number, label: string): Uint8Array => {
   }
   return hexToBytes(clean);
 };
+
+function retireOnEdit(controls: HTMLElement[], outputs: HTMLElement[], retire: (control: HTMLElement) => void): void {
+  for (const control of controls) {
+    control.addEventListener(control instanceof HTMLSelectElement ? 'change' : 'input', () => {
+      retire(control);
+      for (const output of outputs) output.replaceChildren();
+    });
+  }
+}
 
 // Exhibit 1: Camellia
 const camKeySize = $('cam-keysize') as HTMLSelectElement;
@@ -193,6 +203,10 @@ $('cam-compare').addEventListener('click', () => {
   }
 });
 
+retireOnEdit([camKey, camIv, camPlaintext, camKeySize, camMode],
+  [camOutput, camCompareCam, camCompareCamDec, camCompareAes, camCompareAesDec],
+  (control) => { if (control === camPlaintext) camLastCipherHex = ''; });
+
 // Exhibit 2: ARIA
 const ariaKeySize = $('aria-keysize') as HTMLSelectElement;
 const ariaKey = $('aria-key') as HTMLInputElement;
@@ -200,6 +214,7 @@ const ariaPlaintext = $('aria-plaintext') as HTMLInputElement;
 const ariaOutput = $('aria-output');
 
 let ariaLastCipherHex = '';
+retireOnEdit([ariaPlaintext, ariaKey, ariaKeySize], [ariaOutput], (control) => { if (control === ariaPlaintext) ariaLastCipherHex = ''; });
 
 const refreshAriaDefaults = (): void => {
   const keyBytes = Number(ariaKeySize.value) / 8;
@@ -240,8 +255,8 @@ const hex2 = (n: number): string => n.toString(16).padStart(2, '0').toUpperCase(
 $('aria-sbox-go').addEventListener('click', () => {
   const inputEl = $('aria-sbox-input') as HTMLInputElement;
   const demo = $('aria-sbox-demo');
-  const clean = inputEl.value.trim().replace(/^0x/i, '').padStart(2, '0').slice(-2);
-  if (!/^[0-9a-fA-F]{2}$/.test(clean)) {
+  const clean = inputEl.value.trim();
+  if (!/^[0-9a-fA-F]{1,2}$/.test(clean)) {
     outputError(demo, 'Enter exactly one byte in hex (00-ff)');
     return;
   }
@@ -334,8 +349,8 @@ const animateAriaSbox = (): void => {
   ariaSboxTimers.forEach((t) => window.clearTimeout(t));
   ariaSboxTimers = [];
   const inputEl = $('aria-sbox-input') as HTMLInputElement;
-  const clean = inputEl.value.trim().replace(/^0x/i, '').padStart(2, '0').slice(-2);
-  if (!/^[0-9a-fA-F]{2}$/.test(clean)) {
+  const clean = inputEl.value.trim();
+  if (!/^[0-9a-fA-F]{1,2}$/.test(clean)) {
     ariaSboxStep.textContent = 'Enter one byte in hex (00–ff) above first.';
     return;
   }
@@ -370,6 +385,14 @@ const animateAriaSbox = (): void => {
     delay += 1100;
   }
 };
+
+$('aria-sbox-input').addEventListener('input', () => {
+  ariaSboxTimers.forEach((timer) => window.clearTimeout(timer));
+  ariaSboxTimers = [];
+  clearSboxHighlights();
+  $('aria-sbox-demo').replaceChildren();
+  ariaSboxStep.textContent = 'Run the lookup for this input byte.';
+});
 
 $('aria-sbox-animate').addEventListener('click', animateAriaSbox);
 // Also animate when the primary "Apply S-box" button runs so the two views stay in sync.
@@ -421,6 +444,12 @@ const sm4AnimStages = Array.from(
 const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 let sm4AnimTimers: number[] = [];
 let sm4LastTraceSteps: SM4RoundStep[] = [];
+
+const currentSm4Trace = (key: Uint8Array): SM4RoundStep[] => {
+  const bytes = utf8ToBytes(sm4Plaintext.value);
+  const firstBlock = bytes.length < 16 ? pkcs7Pad(bytes, 16) : bytes.subarray(0, 16);
+  return sm4Trace(key, firstBlock).steps;
+};
 
 const clearSm4Anim = (): void => {
   sm4AnimTimers.forEach((t) => window.clearTimeout(t));
@@ -479,6 +508,14 @@ const playSm4Anim = (steps: SM4RoundStep[]): void => {
   sm4AnimTimers.push(window.setTimeout(() => lightStage(null), delay));
 };
 
+retireOnEdit([sm4Plaintext, sm4Key], [sm4Output, sm4AnimState, sm4AnimRoundLabel], (control) => {
+  if (control === sm4Plaintext) sm4LastCipherHex = '';
+  sm4LastTraceSteps = [];
+  clearSm4Anim();
+  lightStage(null);
+  sm4AnimBar.style.width = '0%';
+});
+
 $('sm4-encrypt').addEventListener('click', () => {
   try {
     const keyHex = parseKeyHex(sm4Key.value, 16, 'SM4 key');
@@ -490,11 +527,7 @@ $('sm4-encrypt').addEventListener('click', () => {
     sm4LastCipherHex = cipherHex;
     outputWithCopy(sm4Output, 'Ciphertext (hex)', cipherHex);
 
-    // Animate the real rounds of the FIRST 16-byte block of the plaintext.
-    const firstBlock = utf8ToBytes(sm4Plaintext.value).slice(0, 16);
-    const block = new Uint8Array(16);
-    block.set(firstBlock.slice(0, 16));
-    playSm4Anim(sm4Trace(keyHex, block).steps);
+    playSm4Anim(currentSm4Trace(keyHex));
   } catch (error) {
     outputError(sm4Output, (error as Error).message);
   }
@@ -506,12 +539,9 @@ $('sm4-anim-run').addEventListener('click', () => {
   } else {
     try {
       const keyHex = parseKeyHex(sm4Key.value, 16, 'SM4 key');
-      const firstBlock = utf8ToBytes(sm4Plaintext.value).slice(0, 16);
-      const block = new Uint8Array(16);
-      block.set(firstBlock.slice(0, 16));
-      playSm4Anim(sm4Trace(keyHex, block).steps);
-    } catch {
-      /* invalid key — ignore; encrypt surfaces the error */
+      playSm4Anim(currentSm4Trace(keyHex));
+    } catch (error) {
+      sm4AnimRoundLabel.textContent = (error as Error).message;
     }
   }
 });
@@ -522,10 +552,7 @@ $('sm4-anim-run').addEventListener('click', () => {
     const keyHex = hexToBytes(
       sm4Key.value.trim().length === 32 ? sm4Key.value.trim() : randomHex(16),
     );
-    const firstBlock = utf8ToBytes(sm4Plaintext.value).slice(0, 16);
-    const block = new Uint8Array(16);
-    block.set(firstBlock.slice(0, 16));
-    const steps = sm4Trace(keyHex, block).steps;
+    const steps = currentSm4Trace(keyHex);
     sm4LastTraceSteps = steps;
     renderSm4Round(steps[0], steps.length);
   } catch {
@@ -553,6 +580,7 @@ const kuzKey = $('kuz-key') as HTMLInputElement;
 const kuzPlaintext = $('kuz-plaintext') as HTMLInputElement;
 const kuzOutput = $('kuz-output');
 let kuzLastCipherHex = '';
+retireOnEdit([kuzPlaintext, kuzKey], [kuzOutput], (control) => { if (control === kuzPlaintext) kuzLastCipherHex = ''; });
 
 if (!kuzKey.value.trim() || kuzKey.value.trim().length !== 64) {
   kuzKey.value = randomHex(32);
@@ -588,6 +616,7 @@ const kalPlaintext = $('kal-plaintext') as HTMLInputElement;
 const kalOutput = $('kal-output');
 const kalRounds = $('kal-rounds');
 let kalLastCipherHex = '';
+retireOnEdit([kalPlaintext, kalKey], [kalOutput], (control) => { if (control === kalPlaintext) kalLastCipherHex = ''; });
 
 if (!kalKey.value.trim() || kalKey.value.trim().length !== 64) {
   kalKey.value = randomHex(32);
@@ -625,6 +654,7 @@ const beltPlaintext = $('belt-plaintext') as HTMLInputElement;
 const beltOutput = $('belt-output');
 const beltRounds = $('belt-rounds');
 let beltLastCipherHex = '';
+retireOnEdit([beltPlaintext, beltKey], [beltOutput], (control) => { if (control === beltPlaintext) beltLastCipherHex = ''; });
 
 if (!beltKey.value.trim() || beltKey.value.trim().length !== 64) {
   beltKey.value = randomHex(32);
@@ -670,6 +700,7 @@ const seedPlaintext = $('seed-plaintext') as HTMLInputElement;
 const seedOutput = $('seed-output');
 const seedRounds = $('seed-rounds');
 let seedLastCipherHex = '';
+retireOnEdit([seedPlaintext, seedKey, seedIv], [seedOutput], (control) => { if (control === seedPlaintext) seedLastCipherHex = ''; });
 
 if (!seedKey.value.trim() || seedKey.value.trim().length !== 32) {
   seedKey.value = randomHex(16);

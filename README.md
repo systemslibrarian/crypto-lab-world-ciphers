@@ -19,6 +19,9 @@ World Ciphers demonstrates seven national symmetric block ciphers: Camellia-256 
 
 ## Live Demo
 
+Each cipher panel stores the ciphertext from its last encryption. Editing the message clears it. Changing a key or IV clears the displayed result and lets you try decrypting the stored ciphertext with those settings. The SM4 round trace uses the same padded first block as encryption.
+
+
 **[systemslibrarian.github.io/crypto-lab-world-ciphers](https://systemslibrarian.github.io/crypto-lab-world-ciphers/)**
 
 All cipher outputs are real operations — no simulation. To prove it, the page opens with a **live known-answer test (KAT)** that encrypts each cipher's official vector in your browser and checks it byte-for-byte against the published ciphertext: RFC 3713 §A (Camellia), RFC 5794 (ARIA), GB/T 32907-2016 §A.1 (SM4), GOST R 34.12-2015 / RFC 7801 (Kuznyechik), DSTU 7624:2014 Annex B §B.2.7 (Kalyna), STB 34.101.31-2020 Annex A §A.1 (BelT) and RFC 4269 Appendix B.1 (SEED). Ten vectors in all. The same vectors gate `npm test`, and `e2e/claims.spec.ts` re-asserts each one against the standard independently of the app's own table.

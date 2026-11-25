@@ -739,3 +739,40 @@ test('every in-page link points at something that exists', async ({ page }) => {
     await expect(page.locator(target)).toHaveCount(1);
   }
 });
+
+test('edits retire saved ciphertext and recovered messages in each cipher panel', async ({ page }) => {
+  for (const { id } of PANELS) {
+    const field = page.locator(`#${id}-plaintext`);
+    const output = page.locator(`#${id}-output`);
+    await field.fill('First library message');
+    await page.locator(`#${id}-encrypt`).click();
+    await expect(output.locator('.hex')).toBeVisible();
+    await field.fill('Second library message');
+    await expect(output).toBeEmpty();
+    await page.locator(`#${id}-decrypt`).click();
+    await expect(output).toContainText('Encrypt first to produce ciphertext');
+    await page.locator(`#${id}-encrypt`).click();
+    await page.locator(`#${id}-decrypt`).click();
+    await expect(output.locator('.plaintext-result')).toHaveText('Second library message');
+  }
+});
+
+test('SM4 round 32 reproduces the ciphertext of a padded short message', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.reload();
+  await page.locator('#sm4-key').fill('0123456789abcdeffedcba9876543210');
+  for (const message of ['A', '', 'library 📖', '1234567890123456']) {
+    await page.locator('#sm4-plaintext').fill(message);
+    await page.locator('#sm4-encrypt').click();
+    const label = page.locator('#sm4-anim-round');
+    await expect(label).toContainText('Round 32 of 32');
+    const words = await page.locator('#sm4-anim-state .ra-word').allTextContents();
+    const outputWords = [await label.innerText(), words[3], words[2], words[1]];
+    const finalBlock = outputWords.map(word => word.match(/([a-f0-9]{8})$/i)![1]).join('').toLowerCase();
+    const ciphertext = await page.locator('#sm4-output .hex').innerText();
+    expect(finalBlock).toBe(ciphertext.slice(0, 32).toLowerCase());
+  }
+  await page.locator('#aria-sbox-input').fill('');
+  await page.locator('#aria-sbox-go').click();
+  await expect(page.locator('#aria-sbox-demo .error-msg')).toContainText('one byte in hex');
+});
