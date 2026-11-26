@@ -29,7 +29,7 @@
     "@playwright/test": "^1.65.1",
     "typescript": "^5.9.3",
     "vite": "^8.3.8",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   },
   "dependencies": {
     "@li0ard/belt": "^0.1.5",
